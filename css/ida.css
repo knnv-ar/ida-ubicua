@@ -122,15 +122,14 @@ button { font-family: inherit; color: inherit; }
 }
 .creditos__artista { font-size: 18px; letter-spacing: 0.3em; text-transform: uppercase; }
 .creditos__anio { font-size: 20px; color: var(--secundario); }
-.creditos__separador { display: block; width: 280px; max-width: 100%; height: auto; aspect-ratio: 1825 / 142; color: var(--secundario); margin: 8px 0; }
+.separador { display: block; width: 280px; max-width: 100%; height: auto; aspect-ratio: 1825 / 142; color: var(--secundario); margin: 8px 0; }
 .creditos__enlaces { display: flex; gap: 40px; }
 .enlace {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   min-width: 48px; min-height: 48px; text-decoration: none;
 }
-.enlace__texto { font-size: 15px; color: var(--secundario); }
-.creditos__transposicion { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 30px; }
-.creditos__rol { font-size: 18px; font-style: italic; color: var(--secundario); }
+.creditos__transposicion { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 30px; }
+.creditos__rol, .creditos__rotulo { font-size: 18px; font-style: italic; color: var(--secundario); }
 .creditos__nombre { font-size: 14px; letter-spacing: 0.3em; text-transform: uppercase; }
 
 /* Scroll-driven animation (CSS): los créditos se «dibujan» con el mismo gesto
@@ -146,6 +145,7 @@ button { font-family: inherit; color: inherit; }
   .creditos .aparece:nth-child(4) { animation-range: entry 30% cover 50%; }
   .creditos .aparece:nth-child(5) { animation-range: entry 36% cover 50%; }
   .creditos .aparece:nth-child(6) { animation-range: entry 42% cover 50%; }
+  .creditos .aparece:nth-child(7) { animation-range: entry 48% cover 50%; }
   @keyframes aparecer {
     from { opacity: 0; transform: translateX(-24px); }
     to   { opacity: 1; transform: none; }
