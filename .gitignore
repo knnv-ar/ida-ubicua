@@ -1,0 +1,7 @@
+# Originales pesados: no se publican
+originales/
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini

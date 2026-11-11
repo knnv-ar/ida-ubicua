@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IDA ubicua · Luciana Estévez</title>
+<meta name="description" content="IDA ubicua, obra de Luciana Estévez (2026).">
+<meta name="theme-color" content="#0B0B0C">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IDA ubicua">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/icono-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preload" href="fonts/cormorant-garamond-latin-300-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/cormorant-garamond-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="data/imagenes.json" as="fetch" crossorigin>
+<link rel="stylesheet" href="css/ida.css">
+<script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
+</head>
+<body>
+
+<!-- Inicio: pide el celular en vertical y espera el toque que habilita sonido y pantalla completa -->
+<main id="inicio" class="pantalla inicio">
+  <p class="inicio__autora">Luciana Estévez</p>
+  <div class="inicio__centro">
+    <h1 class="titulo titulo--inicio"><span class="titulo__ida">IDA </span>ubicua</h1>
+    <svg class="inicio__celular" width="34" height="56" viewBox="0 0 34 56" fill="none" aria-hidden="true">
+      <rect x="1" y="1" width="32" height="54" rx="6"></rect><line x1="13" y1="49" x2="21" y2="49"></line>
+    </svg>
+    <p class="inicio__indicacion">Sostené el celular<br>en posición vertical</p>
+    <button type="button" id="iniciar" class="boton-iniciar" disabled><i>iniciar</i></button>
+    <p id="sugerencia-ios" class="inicio__sugerencia" hidden>Para verla sin barras: Compartir › Agregar a inicio</p>
+  </div>
+  <p class="inicio__anio">2026</p>
+</main>
+
+<!-- Las tres naves, en un carrusel horizontal con encaje (scroll snap) -->
+<div id="naves" class="naves" hidden>
+
+  <section id="nave-izquierda" class="nave nave--lateral creditos" aria-label="Créditos">
+    <div class="creditos__contenido">
+      <h2 class="titulo titulo--creditos aparece"><span class="titulo__ida">IDA </span>ubicua</h2>
+      <p class="creditos__artista aparece">Luciana Estévez</p>
+      <p class="creditos__anio aparece">2026</p>
+      <div class="creditos__separador aparece" aria-hidden="true"></div>
+      <div class="creditos__enlaces aparece">
+        <a class="enlace" href="mailto:lutelutiana@gmail.com?subject=IDA%20ubicua" aria-label="Escribir a Luciana Estévez">
+          <svg width="30" height="22" viewBox="0 0 30 22" fill="none" aria-hidden="true"><rect x="1" y="1" width="28" height="20" rx="2"></rect><path d="M1 2l14 10L29 2"></path></svg>
+          <span class="enlace__texto">correo</span>
+        </a>
+        <a class="enlace" href="https://www.instagram.com/_lucianaestevez_/" target="_blank" rel="noopener" aria-label="Instagram de Luciana Estévez">
+          <span class="enlace__arroba" aria-hidden="true">@</span>
+          <span class="enlace__texto">_lucianaestevez_</span>
+        </a>
+      </div>
+      <div class="creditos__transposicion aparece">
+        <p class="creditos__rol">Transposición multimedial</p>
+        <p class="creditos__nombre">Raúl Federico Lacabanne</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="nave-central" class="nave nave--central" aria-label="IDA ubicua">
+    <div class="escenario" aria-hidden="true">
+      <div class="capa" id="capa-a"></div>
+      <div class="capa" id="capa-b"></div>
+      <canvas id="lienzo" class="lienzo" hidden></canvas>
+    </div>
+    <div id="cinta" class="cinta" tabindex="0" aria-label="Deslizá hacia arriba o hacia abajo para recorrer las imágenes">
+      <div id="espaciador" class="cinta__espaciador"></div>
+    </div>
+    <div class="progreso" aria-hidden="true"><div id="progreso-avance" class="progreso__avance"></div></div>
+    <div id="indicaciones" class="indicaciones" aria-hidden="true">
+      <span>‹ créditos</span><span>video ›</span>
+    </div>
+  </section>
+
+  <section id="nave-derecha" class="nave nave--lateral nave--video" aria-label="Video">
+    <video id="video" class="video" playsinline loop preload="metadata" poster="img/video-poster.webp" src="video/ida-video-liviano.mp4"></video>
+    <button type="button" id="tocar-video" class="boton-video" hidden><i>reproducir</i></button>
+  </section>
+</div>
+
+<!-- Avisos que tapan todo -->
+<div id="aviso-horizontal" class="aviso aviso--horizontal" role="status">
+  <svg width="34" height="56" viewBox="0 0 34 56" fill="none" aria-hidden="true"><rect x="1" y="1" width="32" height="54" rx="6"></rect><line x1="13" y1="49" x2="21" y2="49"></line></svg>
+  <p>Girá el celular<br>a posición vertical</p>
+</div>
+
+<div id="aviso-escritorio" class="aviso aviso--escritorio" hidden>
+  <h1 class="titulo titulo--inicio"><span class="titulo__ida">IDA </span>ubicua</h1>
+  <p class="aviso__texto">Esta obra está pensada para el celular.<br>Escaneá el código para abrirla allí.</p>
+  <img class="aviso__qr" src="img/qr.svg" width="200" height="200" alt="Código QR que abre knnv-ar.github.io/ida-ubicua">
+  <p class="aviso__url">knnv-ar.github.io/ida-ubicua</p>
+  <p class="aviso__autora">Luciana Estévez · 2026</p>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

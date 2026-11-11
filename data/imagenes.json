@@ -1,0 +1,1069 @@
+{
+ "version": 1,
+ "ladoCorto": 1600,
+ "formato": "webp",
+ "imagenes": [
+  {
+   "id": "fotos-01",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-01.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 539
+  },
+  {
+   "id": "fotos-02",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-02.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 277
+  },
+  {
+   "id": "fotos-03",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-03.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 212
+  },
+  {
+   "id": "fotos-04",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-04.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 439
+  },
+  {
+   "id": "fotos-05",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-05.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 504
+  },
+  {
+   "id": "fotos-06",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-06.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 298
+  },
+  {
+   "id": "fotos-07",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-07.webp",
+   "ancho": 1600,
+   "alto": 2133,
+   "orientacion": "vertical",
+   "kb": 552
+  },
+  {
+   "id": "fotos-08",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-08.webp",
+   "ancho": 1600,
+   "alto": 2133,
+   "orientacion": "vertical",
+   "kb": 543
+  },
+  {
+   "id": "fotos-09",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-09.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 231
+  },
+  {
+   "id": "fotos-10",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-10.webp",
+   "ancho": 960,
+   "alto": 720,
+   "orientacion": "horizontal",
+   "kb": 88
+  },
+  {
+   "id": "fotos-11",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-11.webp",
+   "ancho": 960,
+   "alto": 720,
+   "orientacion": "horizontal",
+   "kb": 48
+  },
+  {
+   "id": "fotos-12",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-12.webp",
+   "ancho": 720,
+   "alto": 960,
+   "orientacion": "vertical",
+   "kb": 57
+  },
+  {
+   "id": "fotos-13",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-13.webp",
+   "ancho": 960,
+   "alto": 720,
+   "orientacion": "horizontal",
+   "kb": 38
+  },
+  {
+   "id": "fotos-14",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-14.webp",
+   "ancho": 1651,
+   "alto": 1239,
+   "orientacion": "horizontal",
+   "kb": 120
+  },
+  {
+   "id": "fotos-15",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-15.webp",
+   "ancho": 1238,
+   "alto": 929,
+   "orientacion": "horizontal",
+   "kb": 153
+  },
+  {
+   "id": "fotos-16",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-16.webp",
+   "ancho": 825,
+   "alto": 619,
+   "orientacion": "horizontal",
+   "kb": 85
+  },
+  {
+   "id": "fotos-17",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-17.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 267
+  },
+  {
+   "id": "fotos-18",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-18.webp",
+   "ancho": 1468,
+   "alto": 1101,
+   "orientacion": "horizontal",
+   "kb": 139
+  },
+  {
+   "id": "fotos-19",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-19.webp",
+   "ancho": 734,
+   "alto": 978,
+   "orientacion": "vertical",
+   "kb": 78
+  },
+  {
+   "id": "fotos-20",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-20.webp",
+   "ancho": 734,
+   "alto": 978,
+   "orientacion": "vertical",
+   "kb": 123
+  },
+  {
+   "id": "fotos-21",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-21.webp",
+   "ancho": 734,
+   "alto": 978,
+   "orientacion": "vertical",
+   "kb": 44
+  },
+  {
+   "id": "fotos-22",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-22.webp",
+   "ancho": 734,
+   "alto": 978,
+   "orientacion": "vertical",
+   "kb": 67
+  },
+  {
+   "id": "fotos-23",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-23.webp",
+   "ancho": 1600,
+   "alto": 2133,
+   "orientacion": "vertical",
+   "kb": 89
+  },
+  {
+   "id": "fotos-24",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-24.webp",
+   "ancho": 1600,
+   "alto": 2133,
+   "orientacion": "vertical",
+   "kb": 67
+  },
+  {
+   "id": "fotos-25",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-25.webp",
+   "ancho": 1600,
+   "alto": 2133,
+   "orientacion": "vertical",
+   "kb": 209
+  },
+  {
+   "id": "fotos-26",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-26.webp",
+   "ancho": 734,
+   "alto": 978,
+   "orientacion": "vertical",
+   "kb": 37
+  },
+  {
+   "id": "fotos-27",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-27.webp",
+   "ancho": 734,
+   "alto": 978,
+   "orientacion": "vertical",
+   "kb": 142
+  },
+  {
+   "id": "fotos-28",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-28.webp",
+   "ancho": 1600,
+   "alto": 2133,
+   "orientacion": "vertical",
+   "kb": 148
+  },
+  {
+   "id": "fotos-29",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-29.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 251
+  },
+  {
+   "id": "fotos-30",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-30.webp",
+   "ancho": 978,
+   "alto": 734,
+   "orientacion": "horizontal",
+   "kb": 119
+  },
+  {
+   "id": "fotos-31",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-31.webp",
+   "ancho": 734,
+   "alto": 978,
+   "orientacion": "vertical",
+   "kb": 31
+  },
+  {
+   "id": "fotos-32",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-32.webp",
+   "ancho": 1468,
+   "alto": 1101,
+   "orientacion": "horizontal",
+   "kb": 54
+  },
+  {
+   "id": "fotos-33",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-33.webp",
+   "ancho": 1468,
+   "alto": 1101,
+   "orientacion": "horizontal",
+   "kb": 165
+  },
+  {
+   "id": "fotos-34",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-34.webp",
+   "ancho": 1468,
+   "alto": 1101,
+   "orientacion": "horizontal",
+   "kb": 363
+  },
+  {
+   "id": "fotos-35",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-35.webp",
+   "ancho": 1468,
+   "alto": 1101,
+   "orientacion": "horizontal",
+   "kb": 145
+  },
+  {
+   "id": "fotos-36",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-36.webp",
+   "ancho": 1468,
+   "alto": 1101,
+   "orientacion": "horizontal",
+   "kb": 158
+  },
+  {
+   "id": "fotos-37",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-37.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 224
+  },
+  {
+   "id": "fotos-38",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-38.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 177
+  },
+  {
+   "id": "fotos-39",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-39.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 458
+  },
+  {
+   "id": "fotos-40",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-40.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 681
+  },
+  {
+   "id": "fotos-41",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-41.webp",
+   "ancho": 1316,
+   "alto": 987,
+   "orientacion": "horizontal",
+   "kb": 92
+  },
+  {
+   "id": "fotos-42",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-42.webp",
+   "ancho": 1316,
+   "alto": 987,
+   "orientacion": "horizontal",
+   "kb": 92
+  },
+  {
+   "id": "fotos-43",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-43.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 204
+  },
+  {
+   "id": "fotos-44",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-44.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 281
+  },
+  {
+   "id": "fotos-45",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-45.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 129
+  },
+  {
+   "id": "fotos-46",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-46.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 202
+  },
+  {
+   "id": "fotos-47",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-47.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 92
+  },
+  {
+   "id": "fotos-48",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-48.webp",
+   "ancho": 960,
+   "alto": 1280,
+   "orientacion": "vertical",
+   "kb": 42
+  },
+  {
+   "id": "fotos-49",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-49.webp",
+   "ancho": 1600,
+   "alto": 2133,
+   "orientacion": "vertical",
+   "kb": 350
+  },
+  {
+   "id": "fotos-50",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-50.webp",
+   "ancho": 1600,
+   "alto": 2133,
+   "orientacion": "vertical",
+   "kb": 93
+  },
+  {
+   "id": "fotos-51",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-51.webp",
+   "ancho": 1403,
+   "alto": 989,
+   "orientacion": "horizontal",
+   "kb": 128
+  },
+  {
+   "id": "fotos-52",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-52.webp",
+   "ancho": 720,
+   "alto": 540,
+   "orientacion": "horizontal",
+   "kb": 49
+  },
+  {
+   "id": "fotos-53",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-53.webp",
+   "ancho": 720,
+   "alto": 540,
+   "orientacion": "horizontal",
+   "kb": 54
+  },
+  {
+   "id": "fotos-54",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-54.webp",
+   "ancho": 720,
+   "alto": 540,
+   "orientacion": "horizontal",
+   "kb": 54
+  },
+  {
+   "id": "fotos-55",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-55.webp",
+   "ancho": 720,
+   "alto": 540,
+   "orientacion": "horizontal",
+   "kb": 44
+  },
+  {
+   "id": "fotos-56",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-56.webp",
+   "ancho": 720,
+   "alto": 540,
+   "orientacion": "horizontal",
+   "kb": 38
+  },
+  {
+   "id": "fotos-57",
+   "carpeta": "fotos",
+   "src": "img/fotos/fotos-57.webp",
+   "ancho": 720,
+   "alto": 540,
+   "orientacion": "horizontal",
+   "kb": 44
+  },
+  {
+   "id": "flores-01",
+   "carpeta": "flores",
+   "src": "img/flores/flores-01.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 204
+  },
+  {
+   "id": "flores-02",
+   "carpeta": "flores",
+   "src": "img/flores/flores-02.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 298
+  },
+  {
+   "id": "flores-03",
+   "carpeta": "flores",
+   "src": "img/flores/flores-03.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 267
+  },
+  {
+   "id": "flores-04",
+   "carpeta": "flores",
+   "src": "img/flores/flores-04.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 203
+  },
+  {
+   "id": "flores-05",
+   "carpeta": "flores",
+   "src": "img/flores/flores-05.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 446
+  },
+  {
+   "id": "flores-06",
+   "carpeta": "flores",
+   "src": "img/flores/flores-06.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 191
+  },
+  {
+   "id": "flores-07",
+   "carpeta": "flores",
+   "src": "img/flores/flores-07.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 176
+  },
+  {
+   "id": "flores-08",
+   "carpeta": "flores",
+   "src": "img/flores/flores-08.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 191
+  },
+  {
+   "id": "flores-09",
+   "carpeta": "flores",
+   "src": "img/flores/flores-09.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 144
+  },
+  {
+   "id": "flores-10",
+   "carpeta": "flores",
+   "src": "img/flores/flores-10.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 217
+  },
+  {
+   "id": "flores-11",
+   "carpeta": "flores",
+   "src": "img/flores/flores-11.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 318
+  },
+  {
+   "id": "flores-12",
+   "carpeta": "flores",
+   "src": "img/flores/flores-12.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 177
+  },
+  {
+   "id": "flores-13",
+   "carpeta": "flores",
+   "src": "img/flores/flores-13.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 145
+  },
+  {
+   "id": "flores-14",
+   "carpeta": "flores",
+   "src": "img/flores/flores-14.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 164
+  },
+  {
+   "id": "flores-15",
+   "carpeta": "flores",
+   "src": "img/flores/flores-15.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 188
+  },
+  {
+   "id": "flores-16",
+   "carpeta": "flores",
+   "src": "img/flores/flores-16.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 188
+  },
+  {
+   "id": "flores-17",
+   "carpeta": "flores",
+   "src": "img/flores/flores-17.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 367
+  },
+  {
+   "id": "flores-18",
+   "carpeta": "flores",
+   "src": "img/flores/flores-18.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 316
+  },
+  {
+   "id": "flores-19",
+   "carpeta": "flores",
+   "src": "img/flores/flores-19.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 277
+  },
+  {
+   "id": "flores-20",
+   "carpeta": "flores",
+   "src": "img/flores/flores-20.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 134
+  },
+  {
+   "id": "flores-21",
+   "carpeta": "flores",
+   "src": "img/flores/flores-21.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 300
+  },
+  {
+   "id": "flores-22",
+   "carpeta": "flores",
+   "src": "img/flores/flores-22.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 273
+  },
+  {
+   "id": "flores-23",
+   "carpeta": "flores",
+   "src": "img/flores/flores-23.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 262
+  },
+  {
+   "id": "flores-24",
+   "carpeta": "flores",
+   "src": "img/flores/flores-24.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 291
+  },
+  {
+   "id": "flores-25",
+   "carpeta": "flores",
+   "src": "img/flores/flores-25.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 603
+  },
+  {
+   "id": "flores-26",
+   "carpeta": "flores",
+   "src": "img/flores/flores-26.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 229
+  },
+  {
+   "id": "flores-27",
+   "carpeta": "flores",
+   "src": "img/flores/flores-27.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 194
+  },
+  {
+   "id": "flores-28",
+   "carpeta": "flores",
+   "src": "img/flores/flores-28.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 128
+  },
+  {
+   "id": "flores-29",
+   "carpeta": "flores",
+   "src": "img/flores/flores-29.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 482
+  },
+  {
+   "id": "flores-30",
+   "carpeta": "flores",
+   "src": "img/flores/flores-30.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 318
+  },
+  {
+   "id": "flores-31",
+   "carpeta": "flores",
+   "src": "img/flores/flores-31.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 127
+  },
+  {
+   "id": "flores-32",
+   "carpeta": "flores",
+   "src": "img/flores/flores-32.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 189
+  },
+  {
+   "id": "flores-33",
+   "carpeta": "flores",
+   "src": "img/flores/flores-33.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 174
+  },
+  {
+   "id": "flores-34",
+   "carpeta": "flores",
+   "src": "img/flores/flores-34.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 189
+  },
+  {
+   "id": "flores-35",
+   "carpeta": "flores",
+   "src": "img/flores/flores-35.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 229
+  },
+  {
+   "id": "flores-36",
+   "carpeta": "flores",
+   "src": "img/flores/flores-36.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 171
+  },
+  {
+   "id": "flores-37",
+   "carpeta": "flores",
+   "src": "img/flores/flores-37.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 209
+  },
+  {
+   "id": "flores-38",
+   "carpeta": "flores",
+   "src": "img/flores/flores-38.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 143
+  },
+  {
+   "id": "flores-39",
+   "carpeta": "flores",
+   "src": "img/flores/flores-39.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 243
+  },
+  {
+   "id": "flores-40",
+   "carpeta": "flores",
+   "src": "img/flores/flores-40.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 133
+  },
+  {
+   "id": "flores-41",
+   "carpeta": "flores",
+   "src": "img/flores/flores-41.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 129
+  },
+  {
+   "id": "flores-42",
+   "carpeta": "flores",
+   "src": "img/flores/flores-42.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 126
+  },
+  {
+   "id": "flores-43",
+   "carpeta": "flores",
+   "src": "img/flores/flores-43.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 94
+  },
+  {
+   "id": "flores-44",
+   "carpeta": "flores",
+   "src": "img/flores/flores-44.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 210
+  },
+  {
+   "id": "flores-45",
+   "carpeta": "flores",
+   "src": "img/flores/flores-45.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 118
+  },
+  {
+   "id": "flores-46",
+   "carpeta": "flores",
+   "src": "img/flores/flores-46.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 167
+  },
+  {
+   "id": "flores-47",
+   "carpeta": "flores",
+   "src": "img/flores/flores-47.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 283
+  },
+  {
+   "id": "flores-48",
+   "carpeta": "flores",
+   "src": "img/flores/flores-48.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 120
+  },
+  {
+   "id": "flores-49",
+   "carpeta": "flores",
+   "src": "img/flores/flores-49.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 127
+  },
+  {
+   "id": "flores-50",
+   "carpeta": "flores",
+   "src": "img/flores/flores-50.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 396
+  },
+  {
+   "id": "flores-51",
+   "carpeta": "flores",
+   "src": "img/flores/flores-51.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 137
+  },
+  {
+   "id": "flores-52",
+   "carpeta": "flores",
+   "src": "img/flores/flores-52.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 260
+  },
+  {
+   "id": "flores-53",
+   "carpeta": "flores",
+   "src": "img/flores/flores-53.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 223
+  },
+  {
+   "id": "flores-54",
+   "carpeta": "flores",
+   "src": "img/flores/flores-54.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 211
+  },
+  {
+   "id": "flores-55",
+   "carpeta": "flores",
+   "src": "img/flores/flores-55.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 217
+  },
+  {
+   "id": "flores-56",
+   "carpeta": "flores",
+   "src": "img/flores/flores-56.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 354
+  },
+  {
+   "id": "flores-57",
+   "carpeta": "flores",
+   "src": "img/flores/flores-57.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 443
+  },
+  {
+   "id": "flores-58",
+   "carpeta": "flores",
+   "src": "img/flores/flores-58.webp",
+   "ancho": 1600,
+   "alto": 2133,
+   "orientacion": "vertical",
+   "kb": 360
+  },
+  {
+   "id": "flores-59",
+   "carpeta": "flores",
+   "src": "img/flores/flores-59.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 252
+  },
+  {
+   "id": "flores-60",
+   "carpeta": "flores",
+   "src": "img/flores/flores-60.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 236
+  },
+  {
+   "id": "flores-61",
+   "carpeta": "flores",
+   "src": "img/flores/flores-61.webp",
+   "ancho": 2133,
+   "alto": 1600,
+   "orientacion": "horizontal",
+   "kb": 154
+  }
+ ]
+}

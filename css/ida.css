@@ -1,0 +1,190 @@
+/* IDA ubicua · Variante 1 «Sala». Medidas para un celular de 390 px de ancho. */
+
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 300; font-display: swap; src: url('../fonts/cormorant-garamond-latin-300-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/cormorant-garamond-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/cormorant-garamond-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 300; font-display: swap; src: url('../fonts/cormorant-garamond-latin-300-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 400; font-display: swap; src: url('../fonts/cormorant-garamond-latin-400-italic.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 500; font-display: swap; src: url('../fonts/cormorant-garamond-latin-500-italic.woff2') format('woff2'); }
+
+:root {
+  --fondo: #0B0B0C;
+  --texto: #ECE7DF;
+  --secundario: #8E8880;
+  --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --sombra-texto: 0 1px 10px rgba(0, 0, 0, 0.7);
+  --fundido: 0.6s;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%;
+  background: var(--fondo); color: var(--texto);
+  font-family: var(--serif);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+body { overflow: hidden; }
+p, h1, h2 { margin: 0; }
+[hidden] { display: none !important; }
+a { color: var(--texto); }
+button { font-family: inherit; color: inherit; }
+:focus-visible { outline: 1px solid var(--texto); outline-offset: 3px; }
+
+/* ---------- títulos: «IDA» en redonda, «ubicua» en itálica ---------- */
+.titulo { font-weight: 300; font-style: italic; line-height: 1; text-align: center; }
+.titulo__ida { font-style: normal; }
+.titulo--inicio { font-size: 60px; }
+.titulo--creditos { font-size: 56px; }
+
+/* ---------- inicio ---------- */
+.pantalla { position: fixed; inset: 0; }
+.inicio {
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  text-align: center;
+  padding: calc(72px + env(safe-area-inset-top, 0px)) max(40px, env(safe-area-inset-right, 0px))
+           calc(56px + env(safe-area-inset-bottom, 0px)) max(40px, env(safe-area-inset-left, 0px));
+  transition: opacity var(--fundido) ease;
+}
+.inicio.saliendo { opacity: 0; pointer-events: none; }
+.inicio__autora { font-size: 15px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--secundario); }
+.inicio__centro { display: flex; flex-direction: column; align-items: center; gap: 40px; }
+.inicio__celular { stroke: var(--texto); stroke-width: 1.2; }
+.inicio__indicacion { font-size: 20px; line-height: 1.4; }
+.boton-iniciar {
+  margin-top: 8px; min-height: 52px; padding: 16px 34px;
+  background: none; border: 1px solid var(--texto); border-radius: 10px;
+  font-size: 19px; font-weight: 500; letter-spacing: 0.14em; cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+.boton-iniciar:disabled { opacity: 0.35; cursor: default; }
+.inicio__sugerencia { margin-top: -24px; font-size: 14px; font-style: italic; color: var(--secundario); }
+.inicio__anio { font-size: 15px; letter-spacing: 0.32em; color: var(--secundario); }
+
+/* ---------- carrusel de naves ---------- */
+.naves {
+  position: fixed; inset: 0;
+  display: flex;
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior: none;
+  scrollbar-width: none;
+  opacity: 0; transition: opacity var(--fundido) ease;
+}
+.naves::-webkit-scrollbar { display: none; }
+.naves.visible { opacity: 1; }
+.nave {
+  position: relative; flex: 0 0 100%; width: 100%; height: 100%;
+  scroll-snap-align: center; scroll-snap-stop: always;
+  overflow: hidden;
+}
+
+/* ---------- nave central ---------- */
+.escenario { position: absolute; inset: 0; background: var(--fondo); }
+.capa {
+  position: absolute; inset: 0;
+  background-size: cover; background-repeat: no-repeat; background-position: 50% 50%;
+}
+.lienzo { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cinta {
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  outline: none;
+}
+.cinta::-webkit-scrollbar { display: none; }
+.cinta__espaciador { width: 100%; }
+.progreso {
+  position: absolute; right: 12px; top: 140px; bottom: 140px; width: 1px;
+  background: rgba(255, 255, 255, 0.3); pointer-events: none;
+}
+.progreso__avance { height: 100%; background: #fff; transform-origin: top; transform: scaleY(0); }
+.indicaciones {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: space-between;
+  padding: 26px max(26px, env(safe-area-inset-right, 0px)) calc(34px + env(safe-area-inset-bottom, 0px)) max(26px, env(safe-area-inset-left, 0px));
+  font-size: 19px; font-style: italic; color: #fff; text-shadow: var(--sombra-texto);
+  pointer-events: none;
+  transition: opacity 1.2s ease;
+}
+.indicaciones.oculto { opacity: 0; }
+
+/* ---------- nave izquierda: créditos ---------- */
+.creditos { display: flex; align-items: center; justify-content: center; }
+.creditos__contenido {
+  display: flex; flex-direction: column; align-items: center; gap: 22px;
+  padding: 40px; text-align: center;
+}
+.creditos__artista { font-size: 18px; letter-spacing: 0.3em; text-transform: uppercase; }
+.creditos__anio { font-size: 20px; color: var(--secundario); }
+.creditos__separador { width: 48px; height: 1px; background: var(--secundario); margin: 14px 0; }
+.creditos__enlaces { display: flex; gap: 40px; }
+.enlace {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-width: 48px; min-height: 48px; text-decoration: none;
+}
+.enlace svg { stroke: var(--texto); stroke-width: 1.2; }
+.enlace__arroba {
+  width: 28px; height: 28px; border: 1.2px solid var(--texto); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 17px; line-height: 1;
+}
+.enlace__texto { font-size: 15px; color: var(--secundario); }
+.creditos__transposicion { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 30px; }
+.creditos__rol { font-size: 18px; font-style: italic; color: var(--secundario); }
+.creditos__nombre { font-size: 14px; letter-spacing: 0.3em; text-transform: uppercase; }
+
+/* Scroll-driven animation (CSS): los créditos se «dibujan» con el mismo gesto
+   horizontal que trae la nave a la pantalla. Sin soporte, se ven quietos. */
+@supports (animation-timeline: view()) {
+  .creditos .aparece {
+    animation: aparecer linear both;
+    animation-timeline: view(inline);
+    animation-range: entry 10% cover 50%;
+  }
+  .creditos .aparece:nth-child(2) { animation-range: entry 18% cover 50%; }
+  .creditos .aparece:nth-child(3) { animation-range: entry 24% cover 50%; }
+  .creditos .aparece:nth-child(4) { animation-range: entry 30% cover 50%; }
+  .creditos .aparece:nth-child(5) { animation-range: entry 36% cover 50%; }
+  .creditos .aparece:nth-child(6) { animation-range: entry 42% cover 50%; }
+  @keyframes aparecer {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* ---------- nave derecha: video ---------- */
+.nave--video { background: var(--fondo); }
+.video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--fondo); }
+.boton-video {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  min-height: 52px; padding: 16px 34px;
+  background: rgba(11, 11, 12, 0.5); border: 1px solid var(--texto); border-radius: 10px;
+  font-size: 19px; font-weight: 500; letter-spacing: 0.14em; cursor: pointer;
+}
+
+/* ---------- avisos ---------- */
+.aviso {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+  padding: 40px max(24px, env(safe-area-inset-right, 0px)) 40px max(24px, env(safe-area-inset-left, 0px));
+  background: var(--fondo); text-align: center;
+}
+.aviso svg { stroke: var(--texto); stroke-width: 1.2; transform: rotate(-90deg); }
+.aviso p { font-size: 20px; line-height: 1.4; }
+.aviso--horizontal { display: none; }
+@media (orientation: landscape) and (max-height: 540px) {
+  .aviso--horizontal { display: flex; }
+}
+.aviso--escritorio { gap: 24px; }
+.aviso__texto { color: var(--texto); }
+.aviso__qr { width: 200px; height: 200px; border-radius: 6px; }
+.aviso__url { font-size: 15px; letter-spacing: 0.08em; color: var(--secundario); }
+.aviso__autora { font-size: 15px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--secundario); }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --fundido: 0s; }
+  .creditos .aparece { animation: none !important; }
+}
