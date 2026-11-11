@@ -30,4 +30,4 @@ Para probar en el celular dentro de la misma red wifi: `python -m http.server 80
 - `index.html`, `css/ida.css`, `manifest.webmanifest`
 - `js/main.js` arranque, avisos y estados · `js/naves.js` carrusel horizontal · `js/cinta.js` scroll vertical de la nave central · `js/secuencia.js` shuffle de imágenes y efectos · `js/audio.js` loop del audio · `js/video.js` video · `js/efectos/` shaders de transición
 - `img/`, `audio/`, `video/`, `data/imagenes.json` medios preparados (ver `herramientas/preparar_medios.py`)
-- `fonts/` Cormorant Garamond (SIL Open Font License) · `lib/` three.js r169 (MIT)
+- `fonts/` Cormorant Garamond (SIL Open Font License) · `lib/` three.js r169 (MIT) · íconos de Tabler Icons (MIT, tabler.io/icons) dentro de `index.html`

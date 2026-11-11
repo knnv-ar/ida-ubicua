@@ -33,26 +33,29 @@ a { color: var(--texto); }
 button { font-family: inherit; color: inherit; }
 :focus-visible { outline: 1px solid var(--texto); outline-offset: 3px; }
 
+/* ---------- íconos (Tabler Icons, MIT): trazo fino uniforme a cualquier tamaño ---------- */
+.icono { display: block; fill: none; stroke: var(--texto); stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.icono path { vector-effect: non-scaling-stroke; }
+
 /* ---------- títulos: «IDA» en redonda, «ubicua» en itálica ---------- */
 .titulo { font-weight: 300; font-style: italic; line-height: 1; text-align: center; }
 .titulo__ida { font-style: normal; }
-.titulo--inicio { font-size: 60px; }
-.titulo--creditos { font-size: 56px; }
+.titulo--inicio, .titulo--creditos { font-size: 56px; }
 
 /* ---------- inicio ---------- */
 .pantalla { position: fixed; inset: 0; }
 .inicio {
-  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px;
   text-align: center;
   padding: calc(72px + env(safe-area-inset-top, 0px)) max(40px, env(safe-area-inset-right, 0px))
            calc(56px + env(safe-area-inset-bottom, 0px)) max(40px, env(safe-area-inset-left, 0px));
   transition: opacity var(--fundido) ease;
 }
 .inicio.saliendo { opacity: 0; pointer-events: none; }
-.inicio__autora { font-size: 15px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--secundario); }
-.inicio__centro { display: flex; flex-direction: column; align-items: center; gap: 40px; }
-.inicio__celular { stroke: var(--texto); stroke-width: 1.2; }
-.inicio__indicacion { font-size: 20px; line-height: 1.4; }
+.inicio__cabecera { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.inicio__anio { font-size: 20px; color: var(--secundario); }
+.inicio__autora { font-size: 18px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--texto); }
+.inicio__indicacion { font-size: 20px; line-height: 1.4; color: var(--secundario); }
 .boton-iniciar {
   margin-top: 8px; min-height: 52px; padding: 16px 34px;
   background: none; border: 1px solid var(--texto); border-radius: 10px;
@@ -61,7 +64,6 @@ button { font-family: inherit; color: inherit; }
 }
 .boton-iniciar:disabled { opacity: 0.35; cursor: default; }
 .inicio__sugerencia { margin-top: -24px; font-size: 14px; font-style: italic; color: var(--secundario); }
-.inicio__anio { font-size: 15px; letter-spacing: 0.32em; color: var(--secundario); }
 
 /* ---------- carrusel de naves ---------- */
 .naves {
@@ -120,16 +122,11 @@ button { font-family: inherit; color: inherit; }
 }
 .creditos__artista { font-size: 18px; letter-spacing: 0.3em; text-transform: uppercase; }
 .creditos__anio { font-size: 20px; color: var(--secundario); }
-.creditos__separador { width: 48px; height: 1px; background: var(--secundario); margin: 14px 0; }
+.creditos__separador { display: block; width: 280px; max-width: 100%; height: auto; aspect-ratio: 1825 / 142; color: var(--secundario); margin: 8px 0; }
 .creditos__enlaces { display: flex; gap: 40px; }
 .enlace {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   min-width: 48px; min-height: 48px; text-decoration: none;
-}
-.enlace svg { stroke: var(--texto); stroke-width: 1.2; }
-.enlace__arroba {
-  width: 28px; height: 28px; border: 1.2px solid var(--texto); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; font-size: 17px; line-height: 1;
 }
 .enlace__texto { font-size: 15px; color: var(--secundario); }
 .creditos__transposicion { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 30px; }
@@ -172,9 +169,9 @@ button { font-family: inherit; color: inherit; }
   padding: 40px max(24px, env(safe-area-inset-right, 0px)) 40px max(24px, env(safe-area-inset-left, 0px));
   background: var(--fondo); text-align: center;
 }
-.aviso svg { stroke: var(--texto); stroke-width: 1.2; transform: rotate(-90deg); }
 .aviso p { font-size: 20px; line-height: 1.4; }
 .aviso--horizontal { display: none; }
+.aviso--horizontal p { color: var(--secundario); }
 @media (orientation: landscape) and (max-height: 540px) {
   .aviso--horizontal { display: flex; }
 }
