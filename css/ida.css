@@ -113,6 +113,21 @@ button { font-family: inherit; color: inherit; }
   transition: opacity 1.2s ease;
 }
 .indicaciones.oculto { opacity: 0; }
+/* Guía de desplazamiento (img/scrolling.svg): centrada en la pantalla, sube y baja
+   suavemente hasta que la persona desliza el dedo. */
+.guia-desplazamiento {
+  position: absolute; left: 50%; top: 50%;
+  width: 96px; height: 96px; margin: -48px 0 0 -48px;
+  pointer-events: none; user-select: none;
+  filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.6));
+  animation: guia-flotar 1.8s ease-in-out infinite;
+  transition: opacity 0.5s ease;
+}
+.guia-desplazamiento.oculta { opacity: 0; }
+@keyframes guia-flotar {
+  0%, 100% { transform: translateY(-14px); }
+  50%      { transform: translateY(14px); }
+}
 
 /* ---------- nave izquierda: créditos ---------- */
 .creditos { display: flex; align-items: center; justify-content: center; }
@@ -184,4 +199,5 @@ button { font-family: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   :root { --fundido: 0s; }
   .creditos .aparece { animation: none !important; }
+  .guia-desplazamiento { animation: none; }
 }

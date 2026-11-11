@@ -134,6 +134,39 @@ function arrancar() {
     });
   });
 
+  // Guía de desplazamiento: se oculta con el primer deslizamiento del dedo
+  // (o la rueda / arrastre con mouse al probar en la computadora). No se usa el
+  // evento scroll porque la propia cinta mueve el scroll al acomodarse.
+  function prepararGuia() {
+    const guia = $('guia-desplazamiento');
+    if (!guia) return;
+    const zona = $('nave-central');
+    let inicio = null;
+    const ocultar = () => {
+      quitar();
+      guia.classList.add('oculta');
+      setTimeout(() => guia.remove(), 600);
+    };
+    const alTocar = (e) => { const t = e.touches[0]; inicio = { x: t.clientX, y: t.clientY }; };
+    const alMover = (e) => {
+      const t = e.touches[0];
+      if (!inicio) { inicio = { x: t.clientX, y: t.clientY }; return; }
+      if (Math.hypot(t.clientX - inicio.x, t.clientY - inicio.y) > 6) ocultar();
+    };
+    const alArrastrar = (e) => { if (e.pointerType === 'mouse' && e.buttons) ocultar(); };
+    function quitar() {
+      zona.removeEventListener('touchstart', alTocar);
+      zona.removeEventListener('touchmove', alMover);
+      zona.removeEventListener('wheel', ocultar);
+      zona.removeEventListener('pointermove', alArrastrar);
+    }
+    zona.addEventListener('touchstart', alTocar, { passive: true });
+    zona.addEventListener('touchmove', alMover, { passive: true });
+    zona.addEventListener('wheel', ocultar, { passive: true });
+    zona.addEventListener('pointermove', alArrastrar, { passive: true });
+  }
+  prepararGuia();
+
   // Celular en horizontal o app en segundo plano: todo en pausa.
   const horizontal = matchMedia('(orientation: landscape) and (max-height: 540px)');
   const revisarSistema = () => {
