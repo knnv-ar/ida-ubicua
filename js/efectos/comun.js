@@ -71,6 +71,19 @@ vec4 colB(vec2 uv) { return texture2D(uB, cubrir(uv, uAspB, uPanB)); }
 // Con desenfoque (lod > 0 = más difuso).
 vec4 colA(vec2 uv, float lod) { return texture2D(uA, cubrir(uv, uAspA, uPanA), lod); }
 vec4 colB(vec2 uv, float lod) { return texture2D(uB, cubrir(uv, uAspB, uPanB), lod); }
+
+// Promedio de un bloque de "px" píxeles de pantalla con nivel de mipmap explícito.
+// Se usa cuando las coordenadas son constantes por bloque (mosaico, puntillismo):
+// con texture2D + bias, la GPU calcula el nivel a partir de las derivadas y en los
+// bordes de cada bloque salta al mipmap más difuso, lo que dibuja líneas de grilla.
+float lodBloque(sampler2D t, float aspImg, float px) {
+  float sa = aspPantalla();
+  float sy = aspImg > sa ? 1.0 : aspImg / sa;
+  float texelesPorPx = float(textureSize(t, 0).y) * sy / uRes.y;
+  return log2(max(px * texelesPorPx, 1.0));
+}
+vec4 colABloque(vec2 uv, float px) { return textureLod(uA, cubrir(uv, uAspA, uPanA), lodBloque(uA, uAspA, px)); }
+vec4 colBBloque(vec2 uv, float px) { return textureLod(uB, cubrir(uv, uAspB, uPanB), lodBloque(uB, uAspB, px)); }
 `;
 
 export const cabecera = /* glsl */ `

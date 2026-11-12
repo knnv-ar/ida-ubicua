@@ -1,6 +1,7 @@
 // 6 · Polvo de partículas: la imagen se descompone en partículas (una por celda de
 // la pantalla) que se levantan siguiendo un viento turbulento y, a medida que
-// vuelven a su lugar, cambian al color de la imagen nueva.
+// vuelven a su lugar, cambian al color de la imagen nueva. Todas las partículas
+// son cuadradas (pedido de la autora: una sola forma).
 // A diferencia de los otros cinco, no es solo un shader de pantalla completa:
 // dibuja un fondo (la mezcla difusa de A y B) y encima una nube de puntos.
 import { utiles } from './comun.js';
@@ -32,7 +33,6 @@ attribute vec2 aUv;       // lugar de la partícula en la imagen (0..1)
 attribute vec4 aRand;     // azar propio de cada partícula
 varying vec3 vCol;
 varying float vAlfa;
-varying float vForma;
 
 vec2 rizo(vec2 p) {       // campo sin divergencia: remolinos
   float e = 0.08;
@@ -63,7 +63,6 @@ void main() {
 
   gl_PointSize = uCelda * mix(1.5, 0.45 + 0.6 * L, smoothstep(0.0, 0.6, vuelo));
   vAlfa = smoothstep(0.0, 0.12, m);
-  vForma = smoothstep(0.0, 0.5, vuelo);
   gl_Position = vec4((aUv + off) * 2.0 - 1.0, 0.0, 1.0);
 }
 `,
@@ -72,13 +71,10 @@ void main() {
 precision highp float;
 varying vec3 vCol;
 varying float vAlfa;
-varying float vForma;
 void main() {
-  vec2 c = gl_PointCoord - 0.5;
-  float circulo = 1.0 - smoothstep(0.36, 0.5, length(c));
-  float a = mix(1.0, circulo, vForma) * vAlfa;   // cuadradas en reposo, redondas al volar
-  if (a < 0.01) discard;
-  gl_FragColor = vec4(vCol, a);
+  // Partículas cuadradas: el punto completo, sin recorte circular.
+  if (vAlfa < 0.01) discard;
+  gl_FragColor = vec4(vCol, vAlfa);
 }
 `,
 

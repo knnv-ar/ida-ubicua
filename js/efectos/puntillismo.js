@@ -20,9 +20,8 @@ vec4 efecto(vec2 uv) {
   vec2 g = dot(a, a) < dot(b, b) ? a : b;     // distancia al centro más cercano
   vec2 centro = px - g;
   vec2 cuv = centro / uRes;
-  float lod = log2(s);
-  vec4 cA = colA(cuv, lod);
-  vec4 cB = colB(cuv, lod);
+  vec4 cA = colABloque(cuv, s);
+  vec4 cB = colBBloque(cuv, s);
   float LA = dot(cA.rgb, vec3(0.299, 0.587, 0.114));
   float LB = dot(cB.rgb, vec3(0.299, 0.587, 0.114));
   float kA = 1.0 - smoothstep(0.1, 0.75, uP);
