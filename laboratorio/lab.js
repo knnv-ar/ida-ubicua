@@ -13,6 +13,7 @@ const INICIO = 20;            // se arranca en el medio para poder subir y bajar
 const CLAVE = 'ida-lab-v1';
 
 // ---------- estado ----------
+function firmaDe(ef) { return ef.params.map((p) => p.nombre).join('|'); }
 const estado = {
   efecto: 0,
   shuffle: false,
@@ -26,15 +27,19 @@ try {
   const guardado = JSON.parse(localStorage.getItem(CLAVE) || 'null');
   if (guardado && Array.isArray(guardado.valores)) {
     // Conserva los ajustes ya hechos; los efectos nuevos arrancan con sus valores por defecto.
+    // Un efecto cuyos parámetros cambiaron (otros nombres o rangos) vuelve a sus valores por defecto.
+    const firmas = Array.isArray(guardado.firmas) ? guardado.firmas : [];
     const valores = efectos.map((ef, i) =>
       Array.isArray(guardado.valores[i]) && guardado.valores[i].length === ef.params.length
+        && firmas[i] === firmaDe(ef)
+        && ef.params.every((p, k) => guardado.valores[i][k] >= p.min && guardado.valores[i][k] <= p.max)
         ? guardado.valores[i] : valoresPorDefecto(ef));
     Object.assign(estado, guardado, { valores });
     if (!(estado.efecto >= 0 && estado.efecto < efectos.length)) estado.efecto = 0;
   }
 } catch (e) { /* sin almacenamiento: se usan los valores por defecto */ }
 function guardar() {
-  try { localStorage.setItem(CLAVE, JSON.stringify(estado)); } catch (e) { /* nada */ }
+  try { localStorage.setItem(CLAVE, JSON.stringify({ ...estado, firmas: efectos.map(firmaDe) })); } catch (e) { /* nada */ }
 }
 
 // ---------- WebGL ----------
@@ -70,6 +75,24 @@ if (nube) {
   nube.renderOrder = 1;
   nube.visible = false;
   escena.add(nube);
+}
+// Malla de trozos para los efectos de tipo "vidrio" (fractura): también va sobre el fondo.
+const efVid = efectos.find((ef) => ef.tipo === 'vidrio');
+let vidrio = null;
+if (efVid) {
+  const m = efVid.malla();
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(m.pos, 3));
+  geo.setAttribute('aCelda', new THREE.BufferAttribute(m.celda, 4));
+  geo.setAttribute('aEsquina', new THREE.BufferAttribute(m.esquina, 1));
+  vidrio = new THREE.Mesh(geo, new THREE.ShaderMaterial({
+    vertexShader: efVid.verticeVidrio, fragmentShader: efVid.fragmentoVidrio, uniforms,
+    transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+  }));
+  vidrio.frustumCulled = false;
+  vidrio.renderOrder = 1;
+  vidrio.visible = false;
+  escena.add(vidrio);
 }
 function prepararGrilla(celdaCss) {
   const res = uniforms.uRes.value;
@@ -194,6 +217,7 @@ function deslizador(contenedor, id, etiqueta, unidad, min, max, paso, valor, alC
   const entrada = fila.querySelector('input');
   const salida = fila.querySelector('output');
   entrada.value = valor;
+  entrada.disabled = min === max;            // parámetro fijo: se muestra pero no se mueve
   const mostrar = () => { salida.textContent = formato(entrada.value, paso) + (unidad ? ` ${unidad}` : ''); };
   mostrar();
   entrada.addEventListener('input', () => { mostrar(); alCambiar(parseFloat(entrada.value)); });
@@ -311,6 +335,7 @@ function cuadro(ahora) {
     nube.visible = conPuntos;
     if (conPuntos) prepararGrilla(estado.valores[nEf][0]);
   }
+  if (vidrio) vidrio.visible = efectos[nEf] === efVid && p > 0;
   renderer.render(escena, camara);
 
   ui.nombre.textContent = f < estado.reposo ? 'Reposo · paneo' : efectos[nEf].nombre;
@@ -325,8 +350,10 @@ cargar().then(() => {
   document.body.classList.add('listo');
   // compila los cinco shaders de entrada para que el cambio de efecto no trabe
   if (nube) { prepararGrilla(efPart.params[0].def); nube.visible = true; }
+  if (vidrio) vidrio.visible = true;
   for (const mat of materiales) { plano.material = mat; renderer.compile(escena, camara); }
   if (nube) nube.visible = false;
+  if (vidrio) vidrio.visible = false;
   ultimaClave = '';
   requestAnimationFrame(cuadro);
 }).catch((e) => {

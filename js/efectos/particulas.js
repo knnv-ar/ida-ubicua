@@ -1,9 +1,10 @@
 // 6 · Polvo de partículas: la imagen se descompone en partículas (una por celda de
 // la pantalla) que se levantan siguiendo un viento turbulento y, a medida que
 // vuelven a su lugar, cambian al color de la imagen nueva. Todas las partículas
-// son cuadradas (pedido de la autora: una sola forma).
+// son cuadradas y miden siempre 1 px (pedido de la autora: una sola forma y un
+// solo tamaño, más partículas y más finas).
 // A diferencia de los otros cinco, no es solo un shader de pantalla completa:
-// dibuja un fondo (la mezcla difusa de A y B) y encima una nube de puntos.
+// dibuja un fondo negro y encima una nube de puntos.
 import { utiles } from './comun.js';
 
 export default {
@@ -11,17 +12,17 @@ export default {
   nombre: 'Polvo de partículas',
   tipo: 'particulas',
   params: [
-    { nombre: 'Tamaño de cada partícula', unidad: 'px', min: 3, max: 12, paso: 0.5, def: 3 },
+    // Tamaño fijo: 1 px (medido en un celular de 390 px de ancho, unas 330 000 partículas).
+    { nombre: 'Tamaño de cada partícula', unidad: 'px', min: 1, max: 1, paso: 1, def: 1 },
     { nombre: 'Fuerza del viento', min: 0, max: 1.5, paso: 0.01, def: 1.03 },
     { nombre: 'Escala de los remolinos', min: 0.5, max: 6, paso: 0.1, def: 5.3 },
   ],
 
-  // Fondo: la mezcla difusa y oscurecida de A y B que se ve entre partículas.
+  // Fondo negro entre partículas (cerca de los extremos el pie del shader
+  // lo funde con la imagen pura, igual que en los demás efectos).
   glsl: /* glsl */ `
 vec4 efecto(vec2 uv) {
-  float m = arco();
-  vec3 c = mix(colA(uv, 4.5).rgb, colB(uv, 4.5).rgb, smoothstep(0.3, 0.7, uP));
-  return vec4(c * (1.0 - 0.55 * m), 1.0);
+  return vec4(0.0, 0.0, 0.0, 1.0);
 }
 `,
 
@@ -56,12 +57,11 @@ void main() {
              * uParam.y * pow(vuelo, 1.3);
   off.x /= sa;
 
-  vec3 cA = textureLod(uA, cubrir(aUv, uAspA, uPanA), 1.5).rgb;
-  vec3 cB = textureLod(uB, cubrir(aUv, uAspB, uPanB), 1.5).rgb;
+  vec3 cA = textureLod(uA, cubrir(aUv, uAspA, uPanA), 0.0).rgb;
+  vec3 cB = textureLod(uB, cubrir(aUv, uAspB, uPanB), 0.0).rgb;
   vCol = mix(cA, cB, smoothstep(0.42, 0.58, lp));
-  float L = dot(vCol, vec3(0.299, 0.587, 0.114));
 
-  gl_PointSize = uCelda * mix(1.5, 0.45 + 0.6 * L, smoothstep(0.0, 0.6, vuelo));
+  gl_PointSize = uCelda;            // siempre una celda: 1 px, quieta o en vuelo
   vAlfa = smoothstep(0.0, 0.12, m);
   gl_Position = vec4((aUv + off) * 2.0 - 1.0, 0.0, 1.0);
 }
@@ -80,7 +80,7 @@ void main() {
 
   // Una partícula por celda; se reconstruye si cambia el tamaño o la pantalla.
   grilla(resX, resY, celdaCss) {
-    const celdaDev = Math.max(2, celdaCss * (resX / 390));
+    const celdaDev = Math.max(1, celdaCss * (resX / 390));
     const cols = Math.max(8, Math.round(resX / celdaDev));
     const filas = Math.max(8, Math.round(resY / (resX / cols)));
     const n = cols * filas;

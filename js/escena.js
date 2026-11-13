@@ -1,5 +1,6 @@
 // Dibujante WebGL de la nave central: un plano a pantalla completa con el shader
-// del efecto de cada transición (y la nube de puntos del polvo de partículas).
+// del efecto de cada transición (más la nube de puntos del polvo de partículas y
+// la malla de trozos de la fractura).
 // Misma interfaz que el dibujante CSS: dibujar(estado), precargar(imagenes), medir().
 // dibujar() devuelve false si todavía no puede dibujar (texturas en camino o
 // contexto perdido); en ese caso se muestra el dibujante CSS de respaldo.
@@ -42,6 +43,24 @@ export function crearDibujanteWebGL(lienzo) {
     nube.renderOrder = 1;
     nube.visible = false;
     escena.add(nube);
+  }
+  // Malla de trozos de la fractura (vidrio estallado), también sobre el fondo.
+  const efVid = efectos.find((ef) => ef.tipo === 'vidrio');
+  let vidrio = null;
+  if (efVid) {
+    const m = efVid.malla();
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(m.pos, 3));
+    geo.setAttribute('aCelda', new THREE.BufferAttribute(m.celda, 4));
+    geo.setAttribute('aEsquina', new THREE.BufferAttribute(m.esquina, 1));
+    vidrio = new THREE.Mesh(geo, new THREE.ShaderMaterial({
+      vertexShader: efVid.verticeVidrio, fragmentShader: efVid.fragmentoVidrio, uniforms,
+      transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+    }));
+    vidrio.frustumCulled = false;
+    vidrio.renderOrder = 1;
+    vidrio.visible = false;
+    escena.add(vidrio);
   }
   function prepararGrilla() {
     const res = uniforms.uRes.value;
@@ -155,6 +174,7 @@ export function crearDibujanteWebGL(lienzo) {
       nube.visible = e.p > 0 && efectos[n] === efPart;
       if (nube.visible) prepararGrilla();
     }
+    if (vidrio) vidrio.visible = e.p > 0 && efectos[n] === efVid;
     renderer.render(escena, camara);
     lienzo.style.visibility = 'visible';
     return true;
@@ -163,8 +183,10 @@ export function crearDibujanteWebGL(lienzo) {
   // Compila los shaders de una vez para que el primer uso de cada efecto no trabe.
   function precompilar() {
     if (nube) { prepararGrilla(); nube.visible = true; }
+    if (vidrio) vidrio.visible = true;
     for (const m of materiales) { plano.material = m; renderer.compile(escena, camara); }
     if (nube) nube.visible = false;
+    if (vidrio) vidrio.visible = false;
   }
 
   lienzo.addEventListener('webglcontextlost', (ev) => {

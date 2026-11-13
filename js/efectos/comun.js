@@ -73,7 +73,7 @@ vec4 colA(vec2 uv, float lod) { return texture2D(uA, cubrir(uv, uAspA, uPanA), l
 vec4 colB(vec2 uv, float lod) { return texture2D(uB, cubrir(uv, uAspB, uPanB), lod); }
 
 // Promedio de un bloque de "px" píxeles de pantalla con nivel de mipmap explícito.
-// Se usa cuando las coordenadas son constantes por bloque (mosaico, puntillismo):
+// Se usa cuando las coordenadas son constantes por bloque (mosaico):
 // con texture2D + bias, la GPU calcula el nivel a partir de las derivadas y en los
 // bordes de cada bloque salta al mipmap más difuso, lo que dibuja líneas de grilla.
 float lodBloque(sampler2D t, float aspImg, float px) {
