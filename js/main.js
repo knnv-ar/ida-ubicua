@@ -2,6 +2,7 @@
 import { crearSecuencia } from './secuencia.js';
 import { crearCinta, crearDibujanteCSS } from './cinta.js';
 import { crearNaves } from './naves.js';
+import { crearLaterales } from './laterales.js';
 import { AudioCinta } from './audio.js';
 import { VideoNave } from './video.js';
 import { efectos } from './efectos/index.js';
@@ -33,6 +34,7 @@ function arrancar() {
   let cinta = null;
   let secuencia = null;
   let naves = null;
+  let laterales = null;
   let ctx = null;
   let pausadoPorSistema = false;
 
@@ -45,7 +47,7 @@ function arrancar() {
       dibujante.precargar([-1, 0, 1, 2].map((i) => secuencia.imagen(i)));
       cinta = crearCinta({
         scroller: $('cinta'), espaciador: $('espaciador'),
-        avance: $('progreso-avance'), indicaciones: $('indicaciones'),
+        avance: $('progreso-avance'),
         secuencia, dibujante,
       });
       botonIniciar.disabled = false;
@@ -88,12 +90,14 @@ function arrancar() {
 
   function alCambiarNave(nombre) {
     if (pausadoPorSistema) return;
+    laterales?.alCambiarNave(nombre);
     if (nombre === 'central') { audio.sonar(); cinta?.activar(); }
     else { audio.callar(); cinta?.desactivar(); }
     if (nombre === 'derecha') video.activar(); else video.desactivar();
   }
 
   function pausarTodo() {
+    laterales?.detener();
     audio.callar();
     video.desactivar();
     cinta?.desactivar();
@@ -123,6 +127,11 @@ function arrancar() {
 
     // 3. Naves: primero se ubica la central, después se muestra.
     contenedorNaves.hidden = false;
+    laterales = crearLaterales({
+      naves: contenedorNaves, cinta: $('cinta'),
+      izquierda: $('lateral-creditos'), derecha: $('lateral-video'),
+      indiceFoto: () => cinta?.indice,
+    });
     naves = crearNaves(contenedorNaves, alCambiarNave);
     requestAnimationFrame(() => {
       cinta?.medir();

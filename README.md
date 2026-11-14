@@ -18,6 +18,15 @@ python -m http.server 8000
 
 Para probar en el celular dentro de la misma red wifi: `python -m http.server 8000 --bind 0.0.0.0` y abrir `http://<IP de la computadora>:8000/` en el teléfono.
 
+## Indicaciones de la nave central
+
+Al llegar a la nave central solo se ve la guía de desplazamiento (`img/scrolling.svg`). Las indicaciones «‹ créditos» y «video ›» van a media altura (abajo las tapaba el aviso de pantalla completa de Android), no se tocan y aparecen de a una (`js/laterales.js`, valores en `AJUSTES_LATERALES`):
+
+- Primer asomo: después de pasar al menos 4 fotos y con el dedo quieto 2 s, el carrusel se corre un 14 % hacia los créditos y vuelve con un rebote mínimo; aparece solo «‹ créditos».
+- Segundo asomo: en la detención siguiente (tras recorrer algo más de una pantalla), hacia el video; aparece solo «video ›».
+- Después, con el dedo quieto 2 s, reaparece un solo texto, alternando, de los lados que todavía no se visitaron. Se apagan con 60 px de scroll.
+- Cada asomo ocurre una sola vez y no ocurre si ya se visitó ese lado; un toque lo interrumpe. Con «reducir movimiento» no hay asomo: el texto aparece solo.
+
 ## Nave central: transiciones y vida de las fotos
 
 La nave central es una cinta infinita de fotos manejada por el scroll vertical. Cada foto ocupa un tramo de 4 pantallas de desplazamiento (`AJUSTES.tramo` en `js/cinta.js`): la primera mitad es el reposo (la foto se panea) y la segunda, la transición hacia la foto siguiente. Todo se dibuja con three.js sobre un único lienzo.
@@ -80,7 +89,7 @@ Página de ajuste con dos fotos: un botón por transición y por capa de vida, �
 ## Estructura
 
 - `index.html`, `css/ida.css`, `manifest.webmanifest`
-- `js/main.js` arranque, avisos y estados · `js/naves.js` carrusel horizontal · `js/cinta.js` scroll vertical de la nave central · `js/secuencia.js` shuffle de imágenes y efectos · `js/audio.js` loop del audio · `js/video.js` video · `js/escena.js` dibujante WebGL · `js/efectos/` shaders de transición · `js/vida/` vida de las fotos en reposo
+- `js/main.js` arranque, avisos y estados · `js/naves.js` carrusel horizontal · `js/cinta.js` scroll vertical de la nave central · `js/laterales.js` indicaciones «‹ créditos» / «video ›» y asomos del carrusel · `js/secuencia.js` shuffle de imágenes y efectos · `js/audio.js` loop del audio · `js/video.js` video · `js/escena.js` dibujante WebGL · `js/efectos/` shaders de transición · `js/vida/` vida de las fotos en reposo
 - `laboratorio/` página de ajuste de efectos y vida · `herramientas/` scripts de preparación (`preparar_medios.py`, `generar-profundidad.py`)
 - `img/profundidad/` mapas de profundidad de cada foto
 - `img/`, `audio/`, `video/`, `data/imagenes.json` medios preparados (ver `herramientas/preparar_medios.py`)

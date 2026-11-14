@@ -18,12 +18,11 @@ const BORDE = 40;     // cerca de un extremo se recoloca (con la cinta quieta)
 
 const suave = (t) => t * t * (3 - 2 * t);
 
-export function crearCinta({ scroller, espaciador, avance, indicaciones, secuencia, dibujante }) {
+export function crearCinta({ scroller, espaciador, avance, secuencia, dibujante }) {
   let alto = 1;
   let altoTramo = 1;
   let desplazamiento = 0;     // índice lógico = índice físico + desplazamiento
   let sSuave = null;
-  let inicioScroll = 0;
   let activa = false;
   let quietaDesde = 0;
   let ultimaClave = '';
@@ -41,7 +40,7 @@ export function crearCinta({ scroller, espaciador, avance, indicaciones, secuenc
     espaciador.style.height = `${TRAMOS * altoTramo + alto}px`;
     if (sSuave === null) {
       scroller.scrollTop = MEDIO * altoTramo;
-      sSuave = inicioScroll = scroller.scrollTop;
+      sSuave = scroller.scrollTop;
     } else if (anterior !== altoTramo) {
       scroller.scrollTop = (scroller.scrollTop / anterior) * altoTramo;
       sSuave = scroller.scrollTop;
@@ -63,7 +62,6 @@ export function crearCinta({ scroller, espaciador, avance, indicaciones, secuenc
 
   scroller.addEventListener('scroll', () => {
     quietaDesde = performance.now();
-    if (indicaciones && Math.abs(scroller.scrollTop - inicioScroll) > 60) indicaciones.classList.add('oculto');
     if (activa && !pedido) pedido = requestAnimationFrame(cuadro);
   }, { passive: true });
 

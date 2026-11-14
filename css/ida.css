@@ -104,15 +104,25 @@ button { font-family: inherit; color: inherit; }
   background: rgba(255, 255, 255, 0.3); pointer-events: none;
 }
 .progreso__avance { height: 100%; background: #fff; transform-origin: top; transform: scaleY(0); }
-.indicaciones {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  display: flex; justify-content: space-between;
-  padding: 26px max(26px, env(safe-area-inset-right, 0px)) calc(34px + env(safe-area-inset-bottom, 0px)) max(26px, env(safe-area-inset-left, 0px));
+/* Indicaciones laterales (js/laterales.js): a media altura, lejos de los avisos
+   del sistema que aparecen abajo. No se tocan; una por vez. */
+.lateral {
+  position: absolute; top: 50%; z-index: 2;
+  padding: 12px 16px;
   font-size: 19px; font-style: italic; color: #fff; text-shadow: var(--sombra-texto);
-  pointer-events: none;
+  transform: translateY(-50%);
+  opacity: 0; pointer-events: none; user-select: none;
   transition: opacity 1.2s ease;
 }
-.indicaciones.oculto { opacity: 0; }
+.lateral--izq { left: max(10px, env(safe-area-inset-left, 0px)); }
+.lateral--der { right: max(12px, env(safe-area-inset-right, 0px)); }
+.lateral.visible { opacity: 1; }
+.lateral.apagandose { transition-duration: 0.5s; }
+/* Leve empujón del texto hacia su lado al aparecer (acompaña el asomo). */
+.lateral--izq.empuja { animation: empujar-izq 2s ease-in-out; }
+.lateral--der.empuja { animation: empujar-der 2s ease-in-out; }
+@keyframes empujar-izq { 0%, 100% { translate: 0 0; } 35%, 55% { translate: -6px 0; } }
+@keyframes empujar-der { 0%, 100% { translate: 0 0; } 35%, 55% { translate: 6px 0; } }
 /* Guía de desplazamiento (img/scrolling.svg): centrada en la pantalla, sube y baja
    suavemente hasta que la persona desliza el dedo. */
 .guia-desplazamiento {
@@ -199,5 +209,5 @@ button { font-family: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   :root { --fundido: 0s; }
   .creditos .aparece { animation: none !important; }
-  .guia-desplazamiento { animation: none; }
+  .guia-desplazamiento, .lateral { animation: none !important; }
 }
