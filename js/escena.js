@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { efectos, vertice, fragmentoDe, valoresPorDefecto } from './efectos/index.js';
 import {
   capas, AJUSTES_VIDA, valoresVidaPorDefecto, recetaDe, pesosConDeriva, crearResorte, uniformesVida,
+  muestrasProfundidad, rangoVisible,
   datosRuido, LADO_RUIDO, verticeVida, fragmentoVida,
 } from './vida/index.js';
 
@@ -82,7 +83,7 @@ export function crearDibujanteWebGL(lienzo) {
   ruido.needsUpdate = true;
   const uVida = {
     uImg: { value: null }, uProf: { value: null }, uRuido: { value: ruido },
-    uBal: { value: new THREE.Vector2() }, uZf: { value: 0.5 }, uAliento: { value: 0 },
+    uBal: { value: new THREE.Vector2() }, uZf: { value: 0.5 }, uRangoZ: { value: 1 }, uAliento: { value: 0 },
     uRes: uniforms.uRes, uAsp: { value: 1 }, uPan: { value: 0 },
     uT: { value: 0 }, uRecorrido: { value: 0 }, uElast: { value: 0 }, uSem: { value: 0 },
     uW: { value: [0, 0, 0, 0, 0, 0] },
@@ -123,9 +124,13 @@ export function crearDibujanteWebGL(lienzo) {
     uVida.uAsp.value = t.asp;
     uVida.uPan.value = pan;
     uVida.uSem.value = vida.semilla;
-    const u = uniformesVida(vida, uVida.uT.value, pan, resorte.valor);
+    const sa = uniforms.uRes.value.x / uniforms.uRes.value.y;
+    const u = uniformesVida(vida, uVida.uT.value, pan, resorte.valor, rangoVisible(t.muestras, t.asp, sa, pan));
     uVida.uBal.value.fromArray(u.bal);
-    uVida.uZf.value = u.zf;
+    // el plano de foco se acerca suave a su objetivo (el rango visible cambia con el paneo)
+    t.zf = t.zf === undefined ? u.zf : t.zf + (u.zf - t.zf) * 0.12;
+    uVida.uZf.value = t.zf;
+    uVida.uRangoZ.value = u.rangoZ;
     uVida.uAliento.value = u.aliento;
     uVida.uElast.value = u.elast;
     for (let k = 0; k < capas.length; k++) {
@@ -193,6 +198,7 @@ export function crearDibujanteWebGL(lienzo) {
       decodificar(im.src.replace('img/', 'img/profundidad/')).then((prof) => {
         if (!texturas.has(im.src)) { prof.dispose(); prof.image?.close?.(); return; }
         t.prof = prof;
+        try { t.muestras = muestrasProfundidad(prof.image); } catch (e) { /* sin muestras: rango completo */ }
         if (!perdido) renderer.initTexture(prof);
       }).catch(() => { /* sin mapa: profundidad neutra */ });
       decodificar(im.src).then((tex) => {

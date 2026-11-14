@@ -20,7 +20,7 @@ Para probar en el celular dentro de la misma red wifi: `python -m http.server 80
 
 ## Nave central: transiciones y vida de las fotos
 
-La nave central es una cinta infinita de fotos manejada por el scroll vertical. Cada foto ocupa un tramo de 3 pantallas de desplazamiento (`AJUSTES.tramo` en `js/cinta.js`): la primera mitad es el reposo (la foto se panea) y la segunda, la transición hacia la foto siguiente. Todo se dibuja con three.js sobre un único lienzo.
+La nave central es una cinta infinita de fotos manejada por el scroll vertical. Cada foto ocupa un tramo de 4 pantallas de desplazamiento (`AJUSTES.tramo` en `js/cinta.js`): la primera mitad es el reposo (la foto se panea) y la segunda, la transición hacia la foto siguiente. Todo se dibuja con three.js sobre un único lienzo.
 
 ### Transiciones (`js/efectos/`)
 
@@ -45,13 +45,14 @@ La foto paneada nunca queda quieta. Hay seis capas sutiles y cada reposo usa una
 | --- | --- | --- |
 | Paralaje 2.5D | lo cercano se corre más que lo lejano con el paneo; balanceo lento con el dedo quieto | profundidad 0.05 · balanceo 1 · velocidad 0.2 |
 | Respiración | exposición y viñeta que respiran, grano vivo | exposición 0.084 · período 3.5 s · grano 0.06 |
-| Inercia elástica | estiramiento según la velocidad del scroll y rebote al frenar | estiramiento 0.008 · amortiguación 0.66 · borde cromático 0.001 |
+| Inercia elástica | estiramiento según la velocidad del scroll y rebote al frenar | estiramiento 0.016 · amortiguación 0.66 · borde cromático 0.001 |
 | Luz | manchas de luz de ruido fractal según profundidad y brillo, con el tono de la foto | intensidad 0.36 · detalle 7.1 · velocidad 0.21 |
 | Cinemagraph | vegetación que se mece, agua y cielo que derivan, lejanía que reverbera | amplitud 0.003 · velocidad 0.8 · ondas 15.5 |
-| Cambio de foco | el plano de foco se desliza entre cerca y lejos | desenfoque 2.5 px · deriva 0.06 · recorrido 0.96 |
+| Cambio de foco | el plano de foco se desliza entre lo más lejano y lo más cercano **de lo que está a la vista** | desenfoque 2.5 px · deriva 0.3 · recorrido 1 |
 
 - Variación: cada parámetro se desvía ±30 % del valor ajustado (`DESVIO`) y la intensidad deriva lento mientras se mira la foto. La inercia elástica tiene además un vaivén mínimo para no quedar quieta con el dedo quieto.
 - Rendimiento: el ruido fractal se lee de una textura precalculada (`datosRuido`), lo que es igual para toda la pantalla se calcula una vez por cuadro (`uniformesVida`) y el lienzo se dibuja a 1.5 píxeles por píxel CSS; si los cuadros tardan más de ~26 ms, `escena.js` baja la resolución a 1.25 y después a 1. (Una primera versión superponía hasta tres capas y era demasiado para la GPU de un celular medio.)
+- Foco: `rangoVisible` lee el mapa de profundidad en la CPU (96 px de ancho) y calcula las profundidades de la parte de la foto que está en pantalla con el paneo actual (percentiles 15 y 90); el foco recorre solo ese rango y el desenfoque es relativo a él.
 - `AJUSTES_VIDA`: relevo durante la transición, como un fundido de cine: la foto que sale pierde la vida suavemente hasta la mitad y la que entra la gana desde la mitad (nunca hay dos fotos vivas a la vez); intensidad general 1.5. Durante la transición la foto viva se dibuja en una textura (*render target*) que el efecto lee como si fuera la foto.
 - La cinta dibuja a 30 cuadros por segundo con el dedo quieto y en cada cuadro mientras se desliza; se pausa en horizontal o en segundo plano. Durante la transición la foto viva se dibuja en una textura sin mipmaps.
 

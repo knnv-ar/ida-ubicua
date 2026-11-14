@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { efectos, vertice, fragmentoDe, valoresPorDefecto } from '../js/efectos/index.js';
 import {
   capas, AJUSTES_VIDA, valoresVidaPorDefecto, recetaDe, pesosConDeriva, crearResorte, uniformesVida,
+  muestrasProfundidad, rangoVisible,
   datosRuido, LADO_RUIDO, verticeVida, fragmentoVida,
 } from '../js/vida/index.js';
 
@@ -28,7 +29,7 @@ const estado = {
   valores: efectos.map(valoresPorDefecto),
   suavizado: 0.15,           // 1 = sin suavizado
   reposo: 0.5,               // fracción del tramo dedicada al paneo
-  tramo: 3.0,                // largo de un tramo en alturas de pantalla (igual que el sitio)
+  tramo: 4.0,                // largo de un tramo en alturas de pantalla (igual que el sitio)
   version: 2,                // 2: tramo de 3 pantallas y relevo de la vida a mitad de transición
   semilla: 0,
   vida: {
@@ -61,7 +62,7 @@ try {
     if (!(vida.capa >= 0 && vida.capa < capas.length)) vida.capa = 0;
     delete vida.antes;
     // Ajustes guardados antes de la versión 2: se pasa al tramo de 3 pantallas.
-    const tramo = guardado.version === 2 ? guardado.tramo : 3.0;
+    const tramo = guardado.version === 2 ? guardado.tramo : 4.0;
     Object.assign(estado, guardado, { valores, vida, tramo, version: 2 });
     if (!(estado.efecto >= 0 && estado.efecto < efectos.length)) estado.efecto = 0;
   }
@@ -136,7 +137,7 @@ ruido.generateMipmaps = true;
 ruido.needsUpdate = true;
 const uVida = {
   uImg: { value: null }, uProf: { value: null }, uRuido: { value: ruido },
-  uBal: { value: new THREE.Vector2() }, uZf: { value: 0.5 }, uAliento: { value: 0 },
+  uBal: { value: new THREE.Vector2() }, uZf: { value: 0.5 }, uRangoZ: { value: 1 }, uAliento: { value: 0 },
   uRes: uniforms.uRes, uAsp: { value: 1 }, uPan: { value: 0 },
   uT: { value: 0 }, uRecorrido: { value: 0 }, uElast: { value: 0 }, uSem: { value: 0 },
   uW: { value: [0, 0, 0, 0, 0, 0] },
@@ -177,9 +178,13 @@ function dibujarVida(destino, tex, prof, asp, pan, vida, factor) {
   uVida.uAsp.value = asp;
   uVida.uPan.value = pan;
   uVida.uSem.value = vida.semilla;
-  const u = uniformesVida(vida, uVida.uT.value, pan, resorte.valor);
+  const sa = uniforms.uRes.value.x / uniforms.uRes.value.y;
+  const k = profundidades.indexOf(prof);
+  const u = uniformesVida(vida, uVida.uT.value, pan, resorte.valor, rangoVisible(muestras[k], asp, sa, pan));
   uVida.uBal.value.fromArray(u.bal);
-  uVida.uZf.value = u.zf;
+  zfSuave[k] = zfSuave[k] === undefined ? u.zf : zfSuave[k] + (u.zf - zfSuave[k]) * 0.12;
+  uVida.uZf.value = zfSuave[k];
+  uVida.uRangoZ.value = u.rangoZ;
   uVida.uAliento.value = u.aliento;
   uVida.uElast.value = u.elast;
   for (let k = 0; k < capas.length; k++) {
@@ -213,6 +218,8 @@ function prepararGrilla(celdaCss) {
 
 const texturas = [];
 const profundidades = [];
+const muestras = [];       // mapas de profundidad en la CPU (rango visible para el foco)
+const zfSuave = [];
 const proporciones = [];
 const direccionPaneo = [1, -1];
 
@@ -233,6 +240,7 @@ async function cargar() {
     t.minFilter = THREE.LinearMipmapLinearFilter;
     t.generateMipmaps = true;
     profundidades.push(t);
+    muestras.push(muestrasProfundidad(t.image));
   }
 }
 

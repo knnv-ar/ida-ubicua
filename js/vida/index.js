@@ -26,7 +26,7 @@ export const capas = [
     { nombre: 'Grano', min: 0, max: 0.15, paso: 0.005, def: 0.06 },
   ] },
   { id: 'elastica', nombre: 'Inercia elástica', continua: false, params: [
-    { nombre: 'Estiramiento', min: 0, max: 0.1, paso: 0.002, def: 0.008 },
+    { nombre: 'Estiramiento', min: 0, max: 0.1, paso: 0.002, def: 0.016 },
     { nombre: 'Amortiguación del rebote', min: 0.08, max: 1, paso: 0.01, def: 0.66 },
     { nombre: 'Borde cromático', min: 0, max: 0.01, paso: 0.0005, def: 0.001 },
   ] },
@@ -42,8 +42,8 @@ export const capas = [
   ] },
   { id: 'foco', nombre: 'Cambio de foco', continua: true, params: [
     { nombre: 'Desenfoque máximo', unidad: 'px', min: 0, max: 14, paso: 0.5, def: 2.5 },
-    { nombre: 'Velocidad de la deriva del foco', min: 0, max: 0.3, paso: 0.005, def: 0.06 },
-    { nombre: 'Recorrido del foco con el paneo', min: 0, max: 1, paso: 0.01, def: 0.96 },
+    { nombre: 'Velocidad de la deriva del foco', min: 0, max: 0.6, paso: 0.005, def: 0.3 },
+    { nombre: 'Recorrido del foco con el paneo', min: 0, max: 1, paso: 0.01, def: 1 },
   ] },
 ];
 
@@ -116,7 +116,9 @@ export function pesosConDeriva(receta, t) {
 // Valores iguales para toda la pantalla, calculados una vez por cuadro.
 //   bal: balanceo del paralaje · zf: plano de foco · aliento: respiración ·
 //   elast: resorte de la inercia elástica más un vaivén mínimo con el dedo quieto.
-export function uniformesVida(vida, t, pan, resorte) {
+// rango: profundidades de lo que está a la vista ({ lejos, cerca }, ver rangoVisible):
+// el foco solo recorre ese rango, así nunca enfoca algo que quedó fuera de pantalla.
+export function uniformesVida(vida, t, pan, resorte, rango = { lejos: 0, cerca: 1 }) {
   const c = vida.valores;
   const s0 = vida.semilla * 37;
   const tb = t * c[0][2];
@@ -124,12 +126,48 @@ export function uniformesVida(vida, t, pan, resorte) {
     (ruido1(tb + s0) - 0.5) * 2 * c[0][1],
     (ruido1(tb * 0.83 + s0 + 17.3) - 0.5) * 2 * c[0][1],
   ];
-  let zf = 0.5 + 0.45 * c[5][2] * pan + 0.4 * (ruido1(t * c[5][1] + s0 + 3.7) - 0.5) * 2;
-  zf = Math.min(0.95, Math.max(0.05, zf));
+  // fase 0 = lo más lejano a la vista, 1 = lo más cercano; el paneo la lleva de un
+  // extremo al otro (recorrido) y una deriva lenta la mueve con el dedo quieto.
+  let fase = 0.5 + 0.5 * c[5][2] * pan + 0.45 * (ruido1(t * c[5][1] + s0 + 3.7) - 0.5) * 2;
+  fase = Math.min(1, Math.max(0, fase));
+  const zf = rango.lejos + (rango.cerca - rango.lejos) * fase;
   const aliento = Math.sin(t * 2 * Math.PI / c[1][1] + vida.semilla * 6.2831) * 0.7
     + (ruido1(t * 0.17 + s0 + 9.1) - 0.5) * 0.6;
   const elast = resorte + (ruido1(t * 0.6 + s0 + 5.5) - 0.5) * 0.7;
-  return { bal, zf, aliento, elast };
+  return { bal, zf, aliento, elast, rangoZ: Math.max(0.25, rango.cerca - rango.lejos) };
+}
+
+// Muestras del mapa de profundidad en la CPU (96 px de ancho) para saber qué
+// profundidades hay a la vista en cada momento del paneo.
+export function muestrasProfundidad(imagen) {
+  const ancho = 96;
+  const alto = Math.max(1, Math.round(ancho * (imagen.height / imagen.width)));
+  const lienzo = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(ancho, alto)
+    : Object.assign(document.createElement('canvas'), { width: ancho, height: alto });
+  const ctx = lienzo.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(imagen, 0, 0, ancho, alto);
+  const rgba = ctx.getImageData(0, 0, ancho, alto).data;
+  const datos = new Uint8Array(ancho * alto);
+  for (let k = 0; k < datos.length; k++) datos[k] = rgba[k * 4];
+  return { ancho, alto, datos };
+}
+
+// Profundidades de la parte visible de la foto (recorte cover con el paneo):
+// percentil 15 (lejos) y 90 (cerca). El recorte vertical es simétrico, así que no
+// importa si las filas vienen invertidas.
+export function rangoVisible(m, aspImg, aspPantalla, pan) {
+  if (!m) return { lejos: 0, cerca: 1 };
+  let sx = 1, sy = 1;
+  if (aspImg > aspPantalla) sx = aspPantalla / aspImg; else sy = aspImg / aspPantalla;
+  const x0 = (1 - sx) * 0.5 + pan * (1 - sx) * 0.5, y0 = (1 - sy) * 0.5;
+  const c0 = Math.floor(x0 * m.ancho), c1 = Math.min(m.ancho, Math.ceil((x0 + sx) * m.ancho));
+  const f0 = Math.floor(y0 * m.alto), f1 = Math.min(m.alto, Math.ceil((y0 + sy) * m.alto));
+  const hist = new Uint32Array(256);
+  let n = 0;
+  for (let f = f0; f < f1; f++) for (let c = Math.max(0, c0); c < c1; c++) { hist[m.datos[f * m.ancho + c]]++; n++; }
+  if (!n) return { lejos: 0, cerca: 1 };
+  const percentil = (q) => { let a = 0; for (let v = 0; v < 256; v++) { a += hist[v]; if (a >= q * n) return v / 255; } return 1; };
+  return { lejos: percentil(0.15), cerca: percentil(0.9) };
 }
 
 // Resorte de la inercia elástica: sigue la velocidad del scroll y rebota al frenar.
@@ -202,6 +240,7 @@ uniform float uW[6];          // peso de cada capa (solo una distinta de 0)
 uniform vec3  uC[6];          // parámetros de cada capa
 uniform vec2  uBal;           // balanceo del paralaje
 uniform float uZf;            // plano de foco (0 lejos, 1 cerca)
+uniform float uRangoZ;        // ancho del rango de profundidades a la vista (mín. 0.25)
 uniform float uAliento;       // respiración (-1..1)
 uniform float uElast;         // resorte de la inercia elástica
 
@@ -281,7 +320,8 @@ void main() {
   vec2 radio = vec2(0.0);
   if (uW[5] > 0.001) {
     float zt = texture2D(uProf, tc).r;
-    float px = uC[5].x * (uRes.x / 390.0) * min(1.0, abs(zt - uZf) * 2.2) * uW[5];
+    // desenfoque relativo al rango visible: siempre hay algo nítido y algo difuso
+    float px = uC[5].x * (uRes.x / 390.0) * min(1.0, abs(zt - uZf) / uRangoZ * 1.6) * uW[5];
     float texPorPx = float(textureSize(uImg, 0).y) * escalaCubrir().y / uRes.y;
     lodF = log2(max(px * texPorPx * 0.7, 1.0));
     radio = px * 0.5 / uRes;

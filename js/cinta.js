@@ -6,7 +6,7 @@
 // desliza, en cada cuadro.
 
 export const AJUSTES = {
-  tramo: 3.0,        // largo de cada imagen, en alturas de pantalla
+  tramo: 4.0,        // largo de cada imagen, en alturas de pantalla
   reposo: 0.5,       // parte del tramo dedicada al paneo
   inercia: 0.15,     // seguimiento del dedo (1 = inmediato)
   cuadrosQuieta: 30, // cuadros por segundo con el dedo quieto (vida de la foto)
