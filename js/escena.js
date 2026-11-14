@@ -2,14 +2,16 @@
 // del efecto de cada transición (más la nube de puntos del polvo de partículas y
 // la malla de trozos de la fractura). En el reposo la foto se dibuja "viva"
 // (js/vida): paralaje, respiración, inercia elástica, luz, cinemagraph y foco,
-// combinados en una receta distinta para cada reposo.
+// una capa por reposo, con sus parámetros desviados al azar.
+// Calidad adaptativa: si los cuadros tardan demasiado, baja la resolución del lienzo.
 // Misma interfaz que el dibujante CSS: dibujar(estado), precargar(imagenes), medir().
 // dibujar() devuelve false si todavía no puede dibujar (texturas en camino o
 // contexto perdido); en ese caso se muestra el dibujante CSS de respaldo.
 import * as THREE from 'three';
 import { efectos, vertice, fragmentoDe, valoresPorDefecto } from './efectos/index.js';
 import {
-  capas, AJUSTES_VIDA, valoresVidaPorDefecto, recetaDe, pesosConDeriva, crearResorte, verticeVida, fragmentoVida,
+  capas, AJUSTES_VIDA, valoresVidaPorDefecto, recetaDe, pesosConDeriva, crearResorte, uniformesVida,
+  datosRuido, LADO_RUIDO, verticeVida, fragmentoVida,
 } from './vida/index.js';
 
 const MAX_TEXTURAS = 8;
@@ -18,7 +20,11 @@ export function crearDibujanteWebGL(lienzo) {
   const renderer = new THREE.WebGLRenderer({
     canvas: lienzo, antialias: false, alpha: false, powerPreference: 'high-performance',
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  // Resolución del lienzo: hasta 1.5 píxeles por píxel CSS (las fotos no tienen más
+  // detalle que eso) y se baja de a un escalón si el celular no llega (ver tiempoDeCuadro).
+  const ESCALONES = [1.5, 1.25, 1].filter((r) => r <= Math.max(1, window.devicePixelRatio || 1));
+  let escalon = 0;
+  renderer.setPixelRatio(ESCALONES[0]);
   const escena = new THREE.Scene();
   const camara = new THREE.Camera();
   const valores = efectos.map(valoresPorDefecto);
@@ -68,8 +74,15 @@ export function crearDibujanteWebGL(lienzo) {
     escena.add(vidrio);
   }
   // ---------- vida de la foto ----------
+  const ruido = new THREE.DataTexture(datosRuido(), LADO_RUIDO, LADO_RUIDO);
+  ruido.wrapS = ruido.wrapT = THREE.RepeatWrapping;
+  ruido.minFilter = THREE.LinearMipmapLinearFilter;
+  ruido.magFilter = THREE.LinearFilter;
+  ruido.generateMipmaps = true;
+  ruido.needsUpdate = true;
   const uVida = {
-    uImg: { value: null }, uProf: { value: null },
+    uImg: { value: null }, uProf: { value: null }, uRuido: { value: ruido },
+    uBal: { value: new THREE.Vector2() }, uZf: { value: 0.5 }, uAliento: { value: 0 },
     uRes: uniforms.uRes, uAsp: { value: 1 }, uPan: { value: 0 },
     uT: { value: 0 }, uRecorrido: { value: 0 }, uElast: { value: 0 }, uSem: { value: 0 },
     uW: { value: [0, 0, 0, 0, 0, 0] },
@@ -81,8 +94,8 @@ export function crearDibujanteWebGL(lienzo) {
   })));
   // Durante la transición la foto viva se dibuja en una textura que el efecto lee como foto.
   const opcionesRT = {
-    minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter,
-    generateMipmaps: true, depthBuffer: false, colorSpace: THREE.NoColorSpace,
+    minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
+    generateMipmaps: false, depthBuffer: false, colorSpace: THREE.NoColorSpace,
   };
   const rtA = new THREE.WebGLRenderTarget(1, 1, opcionesRT);
   const rtB = new THREE.WebGLRenderTarget(1, 1, opcionesRT);
@@ -110,6 +123,11 @@ export function crearDibujanteWebGL(lienzo) {
     uVida.uAsp.value = t.asp;
     uVida.uPan.value = pan;
     uVida.uSem.value = vida.semilla;
+    const u = uniformesVida(vida, uVida.uT.value, pan, resorte.valor);
+    uVida.uBal.value.fromArray(u.bal);
+    uVida.uZf.value = u.zf;
+    uVida.uAliento.value = u.aliento;
+    uVida.uElast.value = u.elast;
     for (let k = 0; k < capas.length; k++) {
       uVida.uW.value[k] = vida.pesos[k] * factor * AJUSTES_VIDA.intensidad;
       uVida.uC.value[k].fromArray(vida.valores[k]);
@@ -233,7 +251,6 @@ export function crearDibujanteWebGL(lienzo) {
     resorte.paso(dt, Math.max(-4, Math.min(4, e.velocidad || 0)), valoresVida[2][1]);
     uVida.uT.value = t;
     uVida.uRecorrido.value = e.recorrido || 0;
-    uVida.uElast.value = resorte.valor;
     const vidaA = vidaDe(e.indice, t);
 
     if (e.p === 0) {
@@ -279,6 +296,22 @@ export function crearDibujanteWebGL(lienzo) {
     return true;
   }
 
+  // Calidad adaptativa: la cinta informa cuánto tardó el cuadro que siguió a cada
+  // dibujo. Si el promedio pasa de ~26 ms (menos de 40 cuadros por segundo), se baja
+  // un escalón de resolución. Nunca se vuelve a subir en la misma visita.
+  let promedio = 16.7, muestras = 0;
+  function tiempoDeCuadro(ms) {
+    if (!(ms > 0) || ms > 250) return;          // pausas, pestaña oculta
+    promedio += (ms - promedio) * 0.08;
+    muestras++;
+    if (muestras > 45 && promedio > 26 && escalon < ESCALONES.length - 1) {
+      escalon++;
+      renderer.setPixelRatio(ESCALONES[escalon]);
+      medir();
+      promedio = 16.7; muestras = 0;
+    }
+  }
+
   // Compila los shaders de una vez para que el primer uso de cada efecto no trabe.
   function precompilar() {
     if (nube) { prepararGrilla(); nube.visible = true; }
@@ -309,5 +342,7 @@ export function crearDibujanteWebGL(lienzo) {
     precargar(imagenes) { imagenes.forEach(cargar); },
     medir,
     precompilar,
+    tiempoDeCuadro,
+    get resolucion() { return ESCALONES[escalon]; },
   };
 }

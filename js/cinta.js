@@ -32,6 +32,7 @@ export function crearCinta({ scroller, espaciador, avance, indicaciones, secuenc
   let sAnterior = null;
   let tAnterior = 0;
   let velocidad = 0;
+  let dibujoPrevio = 0;   // momento del último dibujo, para medir cuánto tardó
 
   function medir() {
     const anterior = altoTramo;
@@ -98,11 +99,14 @@ export function crearCinta({ scroller, espaciador, avance, indicaciones, secuenc
       p = (f - AJUSTES.reposo) / (1 - AJUSTES.reposo);
       panA = sentidoA;
     }
+    // Tiempo del cuadro que siguió a un dibujo (calidad adaptativa del dibujante).
+    if (dibujoPrevio) { dibujante.tiempoDeCuadro?.(ahora - dibujoPrevio); dibujoPrevio = 0; }
     const clave = `${i}|${f.toFixed(5)}`;
     const cambio = clave !== ultimaClave;
     // Con el dedo quieto se dibuja a menor ritmo (la vida es lenta y ahorra batería).
     if (cambio || ahora - ultimoDibujo >= 1000 / AJUSTES.cuadrosQuieta - 2) {
       ultimoDibujo = ahora;
+      dibujoPrevio = ahora;
       dibujante.dibujar({
         indice: i,
         a: secuencia.imagen(i),
@@ -131,6 +135,7 @@ export function crearCinta({ scroller, espaciador, avance, indicaciones, secuenc
     medir,
     activar() {
       activa = true;
+      dibujoPrevio = 0;
       ultimaClave = '';
       if (!pedido) pedido = requestAnimationFrame(cuadro);
     },

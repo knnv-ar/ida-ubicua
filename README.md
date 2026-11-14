@@ -39,7 +39,7 @@ Seis efectos, sorteados sin repetición; cada transición tiene su propia semill
 
 ### Vida de las fotos en reposo (`js/vida/index.js`)
 
-La foto paneada nunca queda quieta: seis capas sutiles, combinadas en una receta distinta para cada reposo.
+La foto paneada nunca queda quieta. Hay seis capas sutiles y cada reposo usa una sola (sorteada sin repetir la del reposo anterior), con sus parámetros desviados al azar.
 
 | Capa | Qué hace | Valores |
 | --- | --- | --- |
@@ -50,9 +50,10 @@ La foto paneada nunca queda quieta: seis capas sutiles, combinadas en una receta
 | Cinemagraph | vegetación que se mece, agua y cielo que derivan, lejanía que reverbera | amplitud 0.003 · velocidad 0.8 · ondas 15.5 |
 | Cambio de foco | el plano de foco se desliza entre cerca y lejos | desenfoque 2.5 px · deriva 0.06 · recorrido 0.96 |
 
-- Receta: una capa dominante (sin repetir la del reposo anterior) y una o dos secundarias; parámetros ±25 % y pesos que derivan lento. Siempre hay al menos una capa que se mueve con el dedo quieto.
+- Variación: cada parámetro se desvía ±30 % del valor ajustado (`DESVIO`) y la intensidad deriva lento mientras se mira la foto. La inercia elástica tiene además un vaivén mínimo para no quedar quieta con el dedo quieto.
+- Rendimiento: el ruido fractal se lee de una textura precalculada (`datosRuido`), lo que es igual para toda la pantalla se calcula una vez por cuadro (`uniformesVida`) y el lienzo se dibuja a 1.5 píxeles por píxel CSS; si los cuadros tardan más de ~26 ms, `escena.js` baja la resolución a 1.25 y después a 1. (Una primera versión superponía hasta tres capas y era demasiado para la GPU de un celular medio.)
 - `AJUSTES_VIDA`: la foto que entra recibe la vida en el último 10 % de la transición, la que sale la conserva en el primer 20 %; intensidad general 1.5. Durante la transición la foto viva se dibuja en una textura (*render target*) que el efecto lee como si fuera la foto.
-- La cinta dibuja a 30 cuadros por segundo con el dedo quieto y en cada cuadro mientras se desliza; se pausa en horizontal o en segundo plano.
+- La cinta dibuja a 30 cuadros por segundo con el dedo quieto y en cada cuadro mientras se desliza; se pausa en horizontal o en segundo plano. Durante la transición la foto viva se dibuja en una textura sin mipmaps.
 
 ### Mapas de profundidad (`img/profundidad/`)
 
@@ -66,7 +67,7 @@ El script saltea los mapas que ya existen: para rehacer uno, borralo antes.
 
 ### Laboratorio (`laboratorio/`)
 
-Página de ajuste con dos fotos: un botón por transición y por capa de vida, recetas al azar, controles de cada parámetro y «ver y copiar valores» para pasar los ajustes al código. Los cambios se guardan en el navegador.
+Página de ajuste con dos fotos: un botón por transición y por capa de vida, «una capa al azar por foto», controles de cada parámetro y «ver y copiar valores» para pasar los ajustes al código. Los cambios se guardan en el navegador.
 
 ## Publicar en GitHub Pages
 

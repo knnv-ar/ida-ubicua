@@ -3,7 +3,10 @@
 // y una transición (el efecto elegido). Dos imágenes alternan para probar el empalme.
 import * as THREE from 'three';
 import { efectos, vertice, fragmentoDe, valoresPorDefecto } from '../js/efectos/index.js';
-import { capas, AJUSTES_VIDA, valoresVidaPorDefecto, recetaDe, pesosConDeriva, crearResorte, verticeVida, fragmentoVida } from '../js/vida/index.js';
+import {
+  capas, AJUSTES_VIDA, valoresVidaPorDefecto, recetaDe, pesosConDeriva, crearResorte, uniformesVida,
+  datosRuido, LADO_RUIDO, verticeVida, fragmentoVida,
+} from '../js/vida/index.js';
 
 const IMAGENES = [
   new URL('../img/fotos/fotos-03.webp', import.meta.url).href,
@@ -28,7 +31,7 @@ const estado = {
   tramo: 2.0,                // largo de un tramo en alturas de pantalla
   semilla: 0,
   vida: {
-    modo: 'receta',          // 'receta' (combinaciones al azar), 'capa' (una sola) o 'apagada'
+    modo: 'receta',          // 'receta' (una capa al azar por foto), 'capa' (la elegida) o 'apagada'
     capa: 0,                 // capa elegida para ver sola y ajustar
     valores: valoresVidaPorDefecto(),
     antes: AJUSTES_VIDA.antes,   // la vida de la foto nueva arranca antes de que termine la transición
@@ -71,7 +74,7 @@ function guardar() {
 // ---------- WebGL ----------
 const lienzo = document.getElementById('lienzo');
 const renderer = new THREE.WebGLRenderer({ canvas: lienzo, antialias: false, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));   // igual que el sitio
 const escena = new THREE.Scene();
 const camara = new THREE.Camera();
 const uniforms = {
@@ -122,8 +125,15 @@ if (efVid) {
 }
 // Vida de la foto: un plano con su propio shader, dibujado en pantalla (reposo) o
 // en una textura que la transición lee como si fuera la foto.
+const ruido = new THREE.DataTexture(datosRuido(), LADO_RUIDO, LADO_RUIDO);
+ruido.wrapS = ruido.wrapT = THREE.RepeatWrapping;
+ruido.minFilter = THREE.LinearMipmapLinearFilter;
+ruido.magFilter = THREE.LinearFilter;
+ruido.generateMipmaps = true;
+ruido.needsUpdate = true;
 const uVida = {
-  uImg: { value: null }, uProf: { value: null },
+  uImg: { value: null }, uProf: { value: null }, uRuido: { value: ruido },
+  uBal: { value: new THREE.Vector2() }, uZf: { value: 0.5 }, uAliento: { value: 0 },
   uRes: uniforms.uRes, uAsp: { value: 1 }, uPan: { value: 0 },
   uT: { value: 0 }, uRecorrido: { value: 0 }, uElast: { value: 0 }, uSem: { value: 0 },
   uW: { value: [0, 0, 0, 0, 0, 0] },
@@ -135,8 +145,8 @@ const materialVida = new THREE.ShaderMaterial({
 });
 escenaVida.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), materialVida));
 const opcionesRT = {
-  minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter,
-  generateMipmaps: true, depthBuffer: false, colorSpace: THREE.NoColorSpace,
+  minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter,
+  generateMipmaps: false, depthBuffer: false, colorSpace: THREE.NoColorSpace,
 };
 const rtA = new THREE.WebGLRenderTarget(1, 1, opcionesRT);
 const rtB = new THREE.WebGLRenderTarget(1, 1, opcionesRT);
@@ -164,6 +174,11 @@ function dibujarVida(destino, tex, prof, asp, pan, vida, factor) {
   uVida.uAsp.value = asp;
   uVida.uPan.value = pan;
   uVida.uSem.value = vida.semilla;
+  const u = uniformesVida(vida, uVida.uT.value, pan, resorte.valor);
+  uVida.uBal.value.fromArray(u.bal);
+  uVida.uZf.value = u.zf;
+  uVida.uAliento.value = u.aliento;
+  uVida.uElast.value = u.elast;
   for (let k = 0; k < capas.length; k++) {
     uVida.uW.value[k] = vida.pesos[k] * factor * estado.vida.intensidad;
     uVida.uC.value[k].fromArray(vida.valores[k]);
@@ -372,14 +387,14 @@ function armarVida() {
   };
   capas.forEach((c, k) => boton(`${k + 1} · ${c.nombre}`, v.modo === 'capa' && v.capa === k,
     () => { v.modo = 'capa'; v.capa = k; guardar(); armarVida(); }));
-  boton('recetas al azar', v.modo === 'receta', () => { v.modo = 'receta'; guardar(); armarVida(); });
+  boton('una capa al azar por foto', v.modo === 'receta', () => { v.modo = 'receta'; guardar(); armarVida(); });
   boton('sin vida', v.modo === 'apagada', () => { v.modo = 'apagada'; guardar(); armarVida(); });
 
   ui.paramsVida.innerHTML = '';
   const c = capas[v.capa];
   const titulo = document.createElement('p');
   titulo.className = 'subtitulo';
-  titulo.textContent = v.modo === 'receta' ? `Parámetros de ${c.nombre} (base de las recetas)` : `Parámetros de ${c.nombre}`;
+  titulo.textContent = v.modo === 'receta' ? `Parámetros de ${c.nombre} (base del sorteo, ±30 %)` : `Parámetros de ${c.nombre}`;
   ui.paramsVida.appendChild(titulo);
   c.params.forEach((p, q) => {
     deslizador(ui.paramsVida, `v-${c.id}-${q}`, p.nombre, p.unidad, p.min, p.max, p.paso, v.valores[v.capa][q],
@@ -481,7 +496,6 @@ function cuadro(ahora) {
 
   uVida.uT.value = t;
   uVida.uRecorrido.value = sSuave / alto;
-  uVida.uElast.value = resorte.valor;
   const vidaA = vidaDe(i, t);
   const sa = uniforms.uRes.value.x / uniforms.uRes.value.y;
 

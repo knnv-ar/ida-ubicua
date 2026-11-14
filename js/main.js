@@ -82,6 +82,7 @@ function arrancar() {
         else { pendientes = imagenes; css.precargar(imagenes); }
       },
       medir() { gl?.medir(); },
+      tiempoDeCuadro(ms) { gl?.tiempoDeCuadro(ms); },
     };
   }
 

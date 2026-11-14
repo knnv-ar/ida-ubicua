@@ -1,13 +1,18 @@
-// «Vida» de las fotos en reposo: seis capas sutiles que se combinan en recetas.
+// «Vida» de las fotos en reposo: seis capas sutiles; cada reposo usa UNA, con sus
+// parámetros desviados alrededor de los valores ajustados (por rendimiento: la
+// superposición de varias capas era demasiado para la GPU de un celular medio).
 // Un solo shader dibuja la foto viva en espacio de pantalla (con el recorte cover y
 // el paneo ya aplicados). Durante las transiciones se dibuja en una textura que el
 // efecto de transición lee como si fuera la foto.
 //   1 paralaje     · desplazamiento según el mapa de profundidad (paneo + balanceo)
 //   2 respiración  · exposición, viñeta y grano que respiran
-//   3 elástica     · estiramiento y rebote según la velocidad del scroll
+//   3 elástica     · estiramiento y rebote según la velocidad del scroll (y un vaivén mínimo)
 //   4 luz          · luz moteada que nace de la propia foto (profundidad, brillo, ruido)
 //   5 cinemagraph  · vaivén de la vegetación, deriva del agua y el cielo, reverberación
 //   6 foco         · el plano de foco se desliza entre cerca y lejos
+// Rendimiento: el ruido fractal se lee de una textura precalculada (datosRuido) y lo
+// que es igual para toda la pantalla (balanceo, foco, respiración, resorte) se
+// calcula una vez por cuadro en JavaScript (uniformesVida).
 
 export const capas = [
   { id: 'paralaje', nombre: 'Paralaje 2.5D', continua: true, params: [
@@ -61,9 +66,9 @@ function mulberry32(a) {
   };
 }
 
-// Capa dominante de cada reposo: bolsa mezclada por bloques de seis, sin repetir
-// la misma capa en dos reposos seguidos.
-function dominanteDe(i, semilla) {
+// Capa de cada reposo: bolsa mezclada por bloques de seis, sin repetir la misma
+// capa en dos reposos seguidos.
+function capaDe(i, semilla) {
   const n = capas.length;
   const bolsa = (b) => {
     const r = mulberry32((b * 7919 + semilla * 104729) | 0);
@@ -80,35 +85,48 @@ function dominanteDe(i, semilla) {
   return orden[k];
 }
 
-// Receta del reposo i: una capa dominante y una o dos secundarias más débiles, con
-// los parámetros sorteados alrededor de los valores ajustados. Siempre hay al menos
-// una capa continua (que se mueve con el dedo quieto).
+export const DESVIO = 0.3;   // cada parámetro varía ±30 % alrededor del valor ajustado
+
+// Receta del reposo i: una sola capa, con sus parámetros desviados al azar.
 export function recetaDe(i, semilla, valores) {
   const azar = mulberry32((i * 2654435761 + semilla * 97 + 13) | 0);
-  const pesos = capas.map(() => 0);
-  const dom = dominanteDe(i, semilla);
-  pesos[dom] = 0.8 + 0.2 * azar();
-  const resto = capas.map((_, k) => k).filter((k) => k !== dom);
-  for (let k = resto.length - 1; k > 0; k--) { const j = Math.floor(azar() * (k + 1)); [resto[k], resto[j]] = [resto[j], resto[k]]; }
-  const nSec = azar() < 0.55 ? 1 : 2;
-  for (let s = 0; s < nSec; s++) pesos[resto[s]] = 0.25 + 0.35 * azar();
-  if (!capas.some((c, k) => c.continua && pesos[k] > 0)) pesos[1] = 0.35 + 0.25 * azar();
+  const capa = capaDe(i, semilla);
+  const pesos = capas.map((_, k) => (k === capa ? 1 : 0));
   const vals = valores.map((vs, k) => vs.map((v, q) => {
     const p = capas[k].params[q];
-    return Math.min(p.max, Math.max(p.min, v * (0.75 + 0.5 * azar())));
+    return Math.min(p.max, Math.max(p.min, v * (1 - DESVIO + 2 * DESVIO * azar())));
   }));
-  return { pesos, valores: vals, fase: azar() * 100, semilla: azar() };
+  return { capa, pesos, valores: vals, fase: azar() * 100, semilla: azar() };
 }
 
-// Ruido suave de una dimensión (para la deriva lenta de las intensidades).
+// Ruido suave de una dimensión.
 function ruido1(x) {
   const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f);
   const h = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
   return h(i) + (h(i + 1) - h(i)) * u;
 }
-// Pesos que derivan con el tiempo: la foto cambia de carácter mientras se la mira.
+// La intensidad de la capa deriva lento: la foto cambia mientras se la mira.
 export function pesosConDeriva(receta, t) {
-  return receta.pesos.map((w, k) => w * (0.6 + 0.4 * ruido1(t * 0.05 + k * 7.31 + receta.fase)));
+  return receta.pesos.map((w) => w * (0.7 + 0.3 * ruido1(t * 0.05 + receta.fase)));
+}
+
+// Valores iguales para toda la pantalla, calculados una vez por cuadro.
+//   bal: balanceo del paralaje · zf: plano de foco · aliento: respiración ·
+//   elast: resorte de la inercia elástica más un vaivén mínimo con el dedo quieto.
+export function uniformesVida(vida, t, pan, resorte) {
+  const c = vida.valores;
+  const s0 = vida.semilla * 37;
+  const tb = t * c[0][2];
+  const bal = [
+    (ruido1(tb + s0) - 0.5) * 2 * c[0][1],
+    (ruido1(tb * 0.83 + s0 + 17.3) - 0.5) * 2 * c[0][1],
+  ];
+  let zf = 0.5 + 0.45 * c[5][2] * pan + 0.4 * (ruido1(t * c[5][1] + s0 + 3.7) - 0.5) * 2;
+  zf = Math.min(0.95, Math.max(0.05, zf));
+  const aliento = Math.sin(t * 2 * Math.PI / c[1][1] + vida.semilla * 6.2831) * 0.7
+    + (ruido1(t * 0.17 + s0 + 9.1) - 0.5) * 0.6;
+  const elast = resorte + (ruido1(t * 0.6 + s0 + 5.5) - 0.5) * 0.7;
+  return { bal, zf, aliento, elast };
 }
 
 // Resorte de la inercia elástica: sigue la velocidad del scroll y rebota al frenar.
@@ -129,6 +147,37 @@ export function crearResorte() {
   };
 }
 
+// Textura de ruido fractal (4 octavas, repetible) precalculada: cuatro campos
+// independientes en R, G, B y A. Cada canal vale la suma de 4 octavas (0..0.94,
+// media 0.47), como el fbm que antes se calculaba en cada píxel.
+export const LADO_RUIDO = 256;
+export function datosRuido(n = LADO_RUIDO) {
+  const acc = new Float32Array(n * n * 4);
+  for (let c = 0; c < 4; c++) {
+    const r = mulberry32(1234 + c * 977);
+    let amp = 0.5;
+    for (const P of [4, 8, 16, 32]) {
+      const g = new Float32Array(P * P);
+      for (let k = 0; k < g.length; k++) g[k] = r();
+      for (let y = 0; y < n; y++) {
+        const fy = (y / n) * P, iy = Math.floor(fy), ty = fy - iy, uy = ty * ty * (3 - 2 * ty);
+        const y0 = iy % P, y1 = (iy + 1) % P;
+        for (let x = 0; x < n; x++) {
+          const fx = (x / n) * P, ix = Math.floor(fx), tx = fx - ix, ux = tx * tx * (3 - 2 * tx);
+          const x0 = ix % P, x1 = (ix + 1) % P;
+          const a = g[y0 * P + x0] + (g[y0 * P + x1] - g[y0 * P + x0]) * ux;
+          const b = g[y1 * P + x0] + (g[y1 * P + x1] - g[y1 * P + x0]) * ux;
+          acc[(y * n + x) * 4 + c] += amp * (a + (b - a) * uy);
+        }
+      }
+      amp *= 0.5;
+    }
+  }
+  const datos = new Uint8Array(n * n * 4);
+  for (let k = 0; k < datos.length; k++) datos[k] = Math.round(Math.min(1, acc[k]) * 255);
+  return datos;
+}
+
 // ---------- shader ----------
 export const verticeVida = /* glsl */ `
 varying vec2 vUv;
@@ -140,14 +189,18 @@ precision highp float;
 varying vec2 vUv;
 uniform sampler2D uImg;       // foto
 uniform sampler2D uProf;      // mapa de profundidad (1 = cerca), mismo encuadre que la foto
+uniform sampler2D uRuido;     // ruido fractal precalculado (repetible)
 uniform vec2  uRes;           // lienzo en píxeles de dispositivo
 uniform float uAsp, uPan;     // proporción de la foto y paneo (-1..1)
 uniform float uT;             // tiempo en segundos
 uniform float uRecorrido;     // scroll acumulado, en pantallas
-uniform float uElast;         // valor del resorte (velocidad del scroll suavizada)
 uniform float uSem;           // azar propio de la receta, 0..1
-uniform float uW[6];          // peso de cada capa
+uniform float uW[6];          // peso de cada capa (solo una distinta de 0)
 uniform vec3  uC[6];          // parámetros de cada capa
+uniform vec2  uBal;           // balanceo del paralaje
+uniform float uZf;            // plano de foco (0 lejos, 1 cerca)
+uniform float uAliento;       // respiración (-1..1)
+uniform float uElast;         // resorte de la inercia elástica
 
 #define PI 3.14159265
 float sa() { return uRes.x / uRes.y; }
@@ -162,18 +215,8 @@ vec2 cubrir(vec2 uv) {
   off.x += uPan * (1.0 - s.x) * 0.5;
   return off + clamp(uv, 0.0, 1.0) * s;
 }
-float h3(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
-float ruido3(vec3 x) {
-  vec3 i = floor(x), f = fract(x);
-  f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(mix(h3(i), h3(i + vec3(1, 0, 0)), f.x), mix(h3(i + vec3(0, 1, 0)), h3(i + vec3(1, 1, 0)), f.x), f.y),
-             mix(mix(h3(i + vec3(0, 0, 1)), h3(i + vec3(1, 0, 1)), f.x), mix(h3(i + vec3(0, 1, 1)), h3(i + vec3(1, 1, 1)), f.x), f.y), f.z);
-}
-float fbm3(vec3 p) {
-  float v = 0.0, a = 0.5;
-  for (int i = 0; i < 4; i++) { v += a * ruido3(p); p = p * 2.02 + vec3(1.7, 9.2, 3.1); a *= 0.5; }
-  return v;
-}
+// fbm de la textura: una unidad de p = una celda de la octava más grande.
+vec4 R(vec2 p) { return texture2D(uRuido, p * 0.25); }
 float lum(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
 // Azar entero (pcg3d): sin patrones de franjas en el grano.
 float azarPix(vec2 p, float t) {
@@ -187,19 +230,15 @@ float azarPix(vec2 p, float t) {
 
 void main() {
   vec2 uv = vUv;
-  float s0 = uSem * 37.0;
+  vec2 s0 = vec2(uSem * 37.0, uSem * 53.0);
   vec2 tc0 = cubrir(uv);
   float z = texture2D(uProf, tc0).r;
   vec2 d = vec2(0.0);
 
-  // 1 · Paralaje: lo cercano se corre más que lo lejano con el paneo, y un balanceo
-  // lento de "cámara en mano" lo mantiene vivo con el dedo quieto.
+  // 1 · Paralaje: lo cercano se corre más que lo lejano con el paneo y el balanceo.
   if (uW[0] > 0.001) {
-    vec3 c = uC[0];
-    float tb = uT * c.z;
-    vec2 balanceo = (vec2(ruido3(vec3(tb, 1.3, s0)), ruido3(vec3(tb * 0.83, 7.1, s0))) - 0.5) * 2.0 * c.y;
-    vec2 camara = vec2(uPan * 0.6, 0.0) + balanceo;
-    d += (z - 0.45) * c.x * camara * vec2(1.0, sa()) * uW[0];
+    vec2 camara = vec2(uPan * 0.6, 0.0) + uBal;
+    d += (z - 0.45) * uC[0].x * camara * vec2(1.0, sa()) * uW[0];
   }
   // 3 · Inercia elástica: se estira en la dirección del scroll, lo cercano llega tarde.
   float cromo = 0.0;
@@ -219,16 +258,16 @@ void main() {
     float lejos = 1.0 - smoothstep(0.15, 0.55, z);
     float t = uT * c.y;
     vec2 q = tc0 * c.z;
-    // vegetación: vaivén con fase propia por zona
     vec2 dc = vec2(0.0);
-    float fase = ruido3(vec3(q * 0.35, s0)) * 6.2831;
+    // vegetación: vaivén con fase propia por zona
+    float fase = (R(q * 0.35 + s0).r - 0.47) * 4.0 * 6.2831;
     dc.x += sin(t * 1.7 + fase) * c.x * verde * (0.5 + 0.5 * z);
     dc.y += cos(t * 1.3 + fase) * c.x * 0.4 * verde * (0.5 + 0.5 * z);
     // agua y cielo: deriva con ruido que fluye
-    vec2 flujo = vec2(fbm3(vec3(q, t * 0.25 + s0)), fbm3(vec3(q + 5.2, t * 0.25 + s0))) - 0.5;
+    vec2 flujo = R(q + s0 + vec2(t * 0.25, t * 0.1)).gb - 0.47;
     dc += flujo * c.x * 1.6 * azul;
     // lejanía: reverberación muy leve, y un aliento mínimo en todo el cuadro
-    dc += (vec2(ruido3(vec3(q * 2.0, t)), ruido3(vec3(q * 2.0 + 9.0, t))) - 0.5) * c.x * (0.6 * lejos + 0.25);
+    dc += (R(q * 2.0 + vec2(-t, t * 0.6)).ba - 0.47) * 1.6 * c.x * (0.6 * lejos + 0.25);
     d += dc * uW[4];
   }
   vec2 tc = cubrir(uv + d);
@@ -238,13 +277,9 @@ void main() {
   float lodF = 0.0;
   vec2 radio = vec2(0.0);
   if (uW[5] > 0.001) {
-    vec3 c = uC[5];
-    float zf = 0.5 + 0.45 * c.z * uPan + 0.4 * (ruido3(vec3(uT * c.y, 3.7, s0)) - 0.5) * 2.0;
-    zf = clamp(zf, 0.05, 0.95);
     float zt = texture2D(uProf, tc).r;
-    float px = c.x * (uRes.x / 390.0) * min(1.0, abs(zt - zf) * 2.2) * uW[5];
-    vec2 sc = escalaCubrir();
-    float texPorPx = float(textureSize(uImg, 0).y) * sc.y / uRes.y;
+    float px = uC[5].x * (uRes.x / 390.0) * min(1.0, abs(zt - uZf) * 2.2) * uW[5];
+    float texPorPx = float(textureSize(uImg, 0).y) * escalaCubrir().y / uRes.y;
     lodF = log2(max(px * texPorPx * 0.7, 1.0));
     radio = px * 0.5 / uRes;
   }
@@ -261,17 +296,18 @@ void main() {
     col.b = textureLod(uImg, cubrir(uv + d - vec2(0.0, cromo)), lodF).b;
   }
 
-  // 4 · Luz: manchas de luz hechas con ruido fractal que deriva; caen más sobre lo
-  // cercano y lo claro, toman el tono de las luces de la propia foto y tienen
-  // paralaje (el dibujo de la luz sobre lo cercano es más grande y se mueve más).
+  // 4 · Luz: manchas de luz de ruido fractal que deriva; caen más sobre lo cercano
+  // y lo claro, toman el tono de las luces de la propia foto y tienen paralaje.
   if (uW[3] > 0.001) {
     vec3 c = uC[3];
     vec3 media = textureLod(uImg, vec2(0.5), 12.0).rgb;
     vec3 tono = mix(vec3(1.0, 0.93, 0.82), media / max(max(media.r, max(media.g, media.b)), 0.02), 0.45);
     float tl = uT * c.z + uRecorrido * 0.12;
     vec2 p = vec2(tc.x * uAsp, tc.y) * c.y * (1.3 - 0.6 * z) + vec2(uPan * 0.25 * (0.3 + z), 0.0);
-    vec2 alabeo = vec2(fbm3(vec3(p * 0.7, tl * 0.6 + s0)), fbm3(vec3(p * 0.7 + 4.3, tl * 0.6 + s0))) - 0.5;
-    float n = fbm3(vec3(p + alabeo * 1.2, tl + s0 * 0.5));
+    vec2 alabeo = R(p * 0.7 + s0 + vec2(tl * 0.6, -tl * 0.45)).rg - 0.47;
+    float n = R(p + alabeo * 1.2 + vec2(tl, tl * 0.7)).b * 0.6
+            + R(p * 1.37 - alabeo + vec2(-tl * 0.8, tl * 0.5) + 3.1).a * 0.4;
+    n = 0.47 + (n - 0.47) * 1.2;      // misma dispersión que el fbm calculado por píxel
     float mancha = smoothstep(0.42, 0.78, n);
     float recibe = mix(0.35, 1.0, z) * (0.45 + 0.55 * smoothstep(0.08, 0.7, lum(col)));
     float k = c.x * uW[3];
@@ -282,10 +318,9 @@ void main() {
   // 2 · Respiración: exposición y viñeta que respiran, y grano vivo de película.
   if (uW[1] > 0.001) {
     vec3 c = uC[1];
-    float aliento = sin(uT * 2.0 * PI / c.y + uSem * 6.2831) * 0.7 + (ruido3(vec3(uT * 0.17, 3.0, s0)) - 0.5) * 0.6;
-    col *= 1.0 + c.x * aliento * uW[1];
+    col *= 1.0 + c.x * uAliento * uW[1];
     float r = length((uv - 0.5) * vec2(sa(), 1.0));
-    float vin = smoothstep(1.05, 0.3, r * (1.0 - 0.05 * aliento));
+    float vin = smoothstep(1.05, 0.3, r * (1.0 - 0.05 * uAliento));
     col *= mix(1.0, vin, 0.3 * uW[1]);
     float tam = max(1.0, floor(uRes.x / 390.0 + 0.5));
     float g = azarPix(floor(uv * uRes / tam), floor(uT * 24.0)) - 0.5;
