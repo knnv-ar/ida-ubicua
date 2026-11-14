@@ -18,6 +18,56 @@ python -m http.server 8000
 
 Para probar en el celular dentro de la misma red wifi: `python -m http.server 8000 --bind 0.0.0.0` y abrir `http://<IP de la computadora>:8000/` en el teléfono.
 
+## Nave central: transiciones y vida de las fotos
+
+La nave central es una cinta infinita de fotos manejada por el scroll vertical. Cada tramo tiene un reposo (la foto se panea) y una transición hacia la foto siguiente. Todo se dibuja con three.js sobre un único lienzo.
+
+### Transiciones (`js/efectos/`)
+
+Seis efectos, sorteados sin repetición; cada transición tiene su propia semilla. Los valores por defecto de cada archivo son los definitivos del laboratorio.
+
+| Efecto | Archivo | Valores |
+| --- | --- | --- |
+| Mosaico | `mosaico.js` | celda 64 px · dispersión 0.69 · curva 0.8 |
+| Separación cromática | `cromatica.js` | niveles 11 · desplazamiento 0.165 · escalonado 0.21 |
+| Glitch | `glitch.js` | bloque 8 px · intensidad 0.83 · saltos 20 |
+| Fractura (vidrio estallado) | `fractura.js` | grietas 27 · anillos 10 · fuerza 1 |
+| Flujo líquido | `liquido.js` | corriente 0.25 · remolinos 2.2 · borde 0.1 |
+| Polvo de partículas | `particulas.js` | 1 px (fijo) · viento 1.03 · remolinos 5.3 |
+
+`comun.js` reúne el GLSL compartido (recorte *cover* con paneo, ruido, muestreo por bloques con `textureLod`) y el «pie» que funde cada efecto con la imagen pura cerca de los extremos. Fractura y polvo de partículas dibujan además una malla de trozos y una nube de puntos (`escena.js`). En los efectos que rompen la imagen el fondo es negro. `puntillismo.js` quedó sin usar (lo reemplazó el glitch).
+
+### Vida de las fotos en reposo (`js/vida/index.js`)
+
+La foto paneada nunca queda quieta: seis capas sutiles, combinadas en una receta distinta para cada reposo.
+
+| Capa | Qué hace | Valores |
+| --- | --- | --- |
+| Paralaje 2.5D | lo cercano se corre más que lo lejano con el paneo; balanceo lento con el dedo quieto | profundidad 0.05 · balanceo 1 · velocidad 0.2 |
+| Respiración | exposición y viñeta que respiran, grano vivo | exposición 0.084 · período 3.5 s · grano 0.06 |
+| Inercia elástica | estiramiento según la velocidad del scroll y rebote al frenar | estiramiento 0.008 · amortiguación 0.66 · borde cromático 0.001 |
+| Luz | manchas de luz de ruido fractal según profundidad y brillo, con el tono de la foto | intensidad 0.36 · detalle 7.1 · velocidad 0.21 |
+| Cinemagraph | vegetación que se mece, agua y cielo que derivan, lejanía que reverbera | amplitud 0.003 · velocidad 0.8 · ondas 15.5 |
+| Cambio de foco | el plano de foco se desliza entre cerca y lejos | desenfoque 2.5 px · deriva 0.06 · recorrido 0.96 |
+
+- Receta: una capa dominante (sin repetir la del reposo anterior) y una o dos secundarias; parámetros ±25 % y pesos que derivan lento. Siempre hay al menos una capa que se mueve con el dedo quieto.
+- `AJUSTES_VIDA`: la foto que entra recibe la vida en el último 10 % de la transición, la que sale la conserva en el primer 20 %; intensidad general 1.5. Durante la transición la foto viva se dibuja en una textura (*render target*) que el efecto lee como si fuera la foto.
+- La cinta dibuja a 30 cuadros por segundo con el dedo quieto y en cada cuadro mientras se desliza; se pausa en horizontal o en segundo plano.
+
+### Mapas de profundidad (`img/profundidad/`)
+
+Uno por foto, con el mismo nombre (`img/profundidad/fotos/fotos-01.webp`): gris, 384 px del lado largo, blanco = cerca. Generados con Depth Anything V2 Small. Para regenerarlos (necesita Python con `onnxruntime`, `numpy` y `Pillow`, y el modelo `depth_anything_v2_vits.onnx` de github.com/fabio-sim/Depth-Anything-ONNX, versión v2.0.0):
+
+```
+python herramientas/generar-profundidad.py depth_anything_v2_vits.onnx img img/profundidad
+```
+
+El script saltea los mapas que ya existen: para rehacer uno, borralo antes.
+
+### Laboratorio (`laboratorio/`)
+
+Página de ajuste con dos fotos: un botón por transición y por capa de vida, recetas al azar, controles de cada parámetro y «ver y copiar valores» para pasar los ajustes al código. Los cambios se guardan en el navegador.
+
 ## Publicar en GitHub Pages
 
 1. Crear el repositorio `ida-ubicua` en la cuenta `knnv-ar`.
@@ -28,6 +78,8 @@ Para probar en el celular dentro de la misma red wifi: `python -m http.server 80
 ## Estructura
 
 - `index.html`, `css/ida.css`, `manifest.webmanifest`
-- `js/main.js` arranque, avisos y estados · `js/naves.js` carrusel horizontal · `js/cinta.js` scroll vertical de la nave central · `js/secuencia.js` shuffle de imágenes y efectos · `js/audio.js` loop del audio · `js/video.js` video · `js/efectos/` shaders de transición
+- `js/main.js` arranque, avisos y estados · `js/naves.js` carrusel horizontal · `js/cinta.js` scroll vertical de la nave central · `js/secuencia.js` shuffle de imágenes y efectos · `js/audio.js` loop del audio · `js/video.js` video · `js/escena.js` dibujante WebGL · `js/efectos/` shaders de transición · `js/vida/` vida de las fotos en reposo
+- `laboratorio/` página de ajuste de efectos y vida · `herramientas/` scripts de preparación (`preparar_medios.py`, `generar-profundidad.py`)
+- `img/profundidad/` mapas de profundidad de cada foto
 - `img/`, `audio/`, `video/`, `data/imagenes.json` medios preparados (ver `herramientas/preparar_medios.py`)
-- `fonts/` Cormorant Garamond (SIL Open Font License) · `lib/` three.js r169 (MIT) · íconos de Tabler Icons (MIT, tabler.io/icons) dentro de `index.html` · separador de créditos tomado de «Decorative text dividers» de FreeSVG.org (dominio público, CC0), copia en `img/separador.svg`
+- `fonts/` Cormorant Garamond (SIL Open Font License) · `lib/` three.js r169 (MIT) · íconos de Tabler Icons (MIT, tabler.io/icons) dentro de `index.html` · separador de créditos tomado de «Decorative text dividers» de FreeSVG.org (dominio público, CC0), copia en `img/separador.svg` · mapas de profundidad generados con Depth Anything V2 Small (Apache-2.0)

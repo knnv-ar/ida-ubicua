@@ -1,12 +1,15 @@
 // La cinta de la nave central: el scroll vertical nativo se traduce en
 // (imagen A, imagen B, paneo, progreso de la transición) y se le pasa a un
-// "dibujante". En la etapa 4 el dibujante es CSS (fundido simple); en la
-// etapa 5 se reemplaza por el de WebGL con los efectos.
+// "dibujante" (WebGL con los efectos; CSS como respaldo).
+// Mientras la nave central está activa se dibuja siempre, porque la foto en
+// reposo está "viva": con el dedo quieto, a 30 cuadros por segundo; mientras se
+// desliza, en cada cuadro.
 
 export const AJUSTES = {
   tramo: 2.0,        // largo de cada imagen, en alturas de pantalla
   reposo: 0.5,       // parte del tramo dedicada al paneo
   inercia: 0.15,     // seguimiento del dedo (1 = inmediato)
+  cuadrosQuieta: 30, // cuadros por segundo con el dedo quieto (vida de la foto)
 };
 
 const TRAMOS = 400;   // largo físico del espaciador
@@ -25,6 +28,10 @@ export function crearCinta({ scroller, espaciador, avance, indicaciones, secuenc
   let quietaDesde = 0;
   let ultimaClave = '';
   let pedido = 0;
+  let ultimoDibujo = 0;
+  let sAnterior = null;
+  let tAnterior = 0;
+  let velocidad = 0;
 
   function medir() {
     const anterior = altoTramo;
@@ -59,12 +66,25 @@ export function crearCinta({ scroller, espaciador, avance, indicaciones, secuenc
     if (activa && !pedido) pedido = requestAnimationFrame(cuadro);
   }, { passive: true });
 
+  // Velocidad del scroll en pantallas por segundo (sin contar las recolocaciones).
+  function medirVelocidad(ahora) {
+    const dt = tAnterior ? Math.min(0.1, (ahora - tAnterior) / 1000) : 1 / 60;
+    tAnterior = ahora;
+    const continuo = sSuave + desplazamiento * altoTramo;   // posición lógica, sin saltos
+    let ds = sAnterior === null ? 0 : (continuo - sAnterior) / alto;
+    if (Math.abs(ds) > 3) ds = 0;
+    sAnterior = continuo;
+    velocidad += (ds / Math.max(dt, 1e-3) - velocidad) * 0.35;
+  }
+
   function cuadro(ahora) {
     pedido = 0;
     if (!activa) return;
+    pedido = requestAnimationFrame(cuadro);
     const objetivo = scroller.scrollTop;
     sSuave += (objetivo - sSuave) * AJUSTES.inercia;
     if (Math.abs(objetivo - sSuave) < 0.05) sSuave = objetivo;
+    medirVelocidad(ahora);
 
     const s = sSuave / altoTramo;
     const fisico = Math.floor(s);
@@ -79,8 +99,10 @@ export function crearCinta({ scroller, espaciador, avance, indicaciones, secuenc
       panA = sentidoA;
     }
     const clave = `${i}|${f.toFixed(5)}`;
-    if (clave !== ultimaClave) {
-      ultimaClave = clave;
+    const cambio = clave !== ultimaClave;
+    // Con el dedo quieto se dibuja a menor ritmo (la vida es lenta y ahorra batería).
+    if (cambio || ahora - ultimoDibujo >= 1000 / AJUSTES.cuadrosQuieta - 2) {
+      ultimoDibujo = ahora;
       dibujante.dibujar({
         indice: i,
         a: secuencia.imagen(i),
@@ -90,13 +112,17 @@ export function crearCinta({ scroller, espaciador, avance, indicaciones, secuenc
         p,
         efecto: secuencia.efecto(i),
         semilla: secuencia.semillaTransicion(i),
+        t: ahora / 1000,
+        velocidad,
+        recorrido: (sSuave + desplazamiento * altoTramo) / alto,
       });
+    }
+    if (cambio) {
+      ultimaClave = clave;
       if (avance) avance.style.transform = `scaleY(${p})`;
       dibujante.precargar?.([i - 1, i + 2, i + 3].map((k) => secuencia.imagen(k)));
     }
-    if (sSuave !== objetivo) pedido = requestAnimationFrame(cuadro);
-    else if (ahora - quietaDesde > 250) recolocar();
-    else pedido = requestAnimationFrame(cuadro);
+    if (sSuave === objetivo && ahora - quietaDesde > 250) recolocar();
   }
 
   window.addEventListener('resize', () => { if (activa) medir(); });

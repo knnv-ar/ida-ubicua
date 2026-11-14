@@ -3,10 +3,15 @@
 // y una transición (el efecto elegido). Dos imágenes alternan para probar el empalme.
 import * as THREE from 'three';
 import { efectos, vertice, fragmentoDe, valoresPorDefecto } from '../js/efectos/index.js';
+import { capas, AJUSTES_VIDA, valoresVidaPorDefecto, recetaDe, pesosConDeriva, crearResorte, verticeVida, fragmentoVida } from '../js/vida/index.js';
 
 const IMAGENES = [
   new URL('../img/fotos/fotos-03.webp', import.meta.url).href,
   new URL('../img/flores/flores-07.webp', import.meta.url).href,
+];
+const PROFUNDIDADES = [
+  new URL('../img/profundidad/fotos/fotos-03.webp', import.meta.url).href,
+  new URL('../img/profundidad/flores/flores-07.webp', import.meta.url).href,
 ];
 const TRAMOS = 40;            // largo de la cinta del laboratorio
 const INICIO = 20;            // se arranca en el medio para poder subir y bajar
@@ -22,7 +27,15 @@ const estado = {
   reposo: 0.5,               // fracción del tramo dedicada al paneo
   tramo: 2.0,                // largo de un tramo en alturas de pantalla
   semilla: 0,
+  vida: {
+    modo: 'receta',          // 'receta' (combinaciones al azar), 'capa' (una sola) o 'apagada'
+    capa: 0,                 // capa elegida para ver sola y ajustar
+    valores: valoresVidaPorDefecto(),
+    antes: AJUSTES_VIDA.antes,   // la vida de la foto nueva arranca antes de que termine la transición
+    intensidad: AJUSTES_VIDA.intensidad,
+  },
 };
+function firmaCapa(c) { return c.params.map((p) => p.nombre).join('|'); }
 try {
   const guardado = JSON.parse(localStorage.getItem(CLAVE) || 'null');
   if (guardado && Array.isArray(guardado.valores)) {
@@ -34,12 +47,25 @@ try {
         && firmas[i] === firmaDe(ef)
         && ef.params.every((p, k) => guardado.valores[i][k] >= p.min && guardado.valores[i][k] <= p.max)
         ? guardado.valores[i] : valoresPorDefecto(ef));
-    Object.assign(estado, guardado, { valores });
+    const vg = guardado.vida || {};
+    const firmasVida = Array.isArray(vg.firmas) ? vg.firmas : [];
+    const valoresVida = capas.map((c, k) =>
+      Array.isArray(vg.valores?.[k]) && vg.valores[k].length === c.params.length && firmasVida[k] === firmaCapa(c)
+        && c.params.every((p, q) => vg.valores[k][q] >= p.min && vg.valores[k][q] <= p.max)
+        ? vg.valores[k] : c.params.map((p) => p.def));
+    const vida = { ...estado.vida, ...vg, valores: valoresVida };
+    if (!['receta', 'capa', 'apagada'].includes(vida.modo)) vida.modo = 'receta';
+    if (!(vida.capa >= 0 && vida.capa < capas.length)) vida.capa = 0;
+    Object.assign(estado, guardado, { valores, vida });
     if (!(estado.efecto >= 0 && estado.efecto < efectos.length)) estado.efecto = 0;
   }
 } catch (e) { /* sin almacenamiento: se usan los valores por defecto */ }
 function guardar() {
-  try { localStorage.setItem(CLAVE, JSON.stringify({ ...estado, firmas: efectos.map(firmaDe) })); } catch (e) { /* nada */ }
+  try {
+    localStorage.setItem(CLAVE, JSON.stringify({
+      ...estado, firmas: efectos.map(firmaDe), vida: { ...estado.vida, firmas: capas.map(firmaCapa) },
+    }));
+  } catch (e) { /* nada */ }
 }
 
 // ---------- WebGL ----------
@@ -94,6 +120,64 @@ if (efVid) {
   vidrio.visible = false;
   escena.add(vidrio);
 }
+// Vida de la foto: un plano con su propio shader, dibujado en pantalla (reposo) o
+// en una textura que la transición lee como si fuera la foto.
+const uVida = {
+  uImg: { value: null }, uProf: { value: null },
+  uRes: uniforms.uRes, uAsp: { value: 1 }, uPan: { value: 0 },
+  uT: { value: 0 }, uRecorrido: { value: 0 }, uElast: { value: 0 }, uSem: { value: 0 },
+  uW: { value: [0, 0, 0, 0, 0, 0] },
+  uC: { value: capas.map(() => new THREE.Vector3()) },
+};
+const escenaVida = new THREE.Scene();
+const materialVida = new THREE.ShaderMaterial({
+  vertexShader: verticeVida, fragmentShader: fragmentoVida, uniforms: uVida, depthTest: false, depthWrite: false,
+});
+escenaVida.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), materialVida));
+const opcionesRT = {
+  minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter,
+  generateMipmaps: true, depthBuffer: false, colorSpace: THREE.NoColorSpace,
+};
+const rtA = new THREE.WebGLRenderTarget(1, 1, opcionesRT);
+const rtB = new THREE.WebGLRenderTarget(1, 1, opcionesRT);
+const resorte = crearResorte();
+const recetas = new Map();
+function recetaDelReposo(i) {
+  const clave = `${i}|${estado.semilla}`;
+  if (!recetas.has(clave)) {
+    if (recetas.size > 64) recetas.clear();
+    recetas.set(clave, recetaDe(i, estado.semilla, estado.vida.valores));
+  }
+  return recetas.get(clave);
+}
+// Pesos y parámetros de la vida del reposo i en el instante t.
+function vidaDe(i, t) {
+  const v = estado.vida;
+  if (v.modo === 'apagada') return { pesos: capas.map(() => 0), valores: v.valores, semilla: 0.5 };
+  if (v.modo === 'capa') return { pesos: capas.map((_, k) => (k === v.capa ? 1 : 0)), valores: v.valores, semilla: 0.37 };
+  const r = recetaDelReposo(i);
+  return { pesos: pesosConDeriva(r, t), valores: r.valores, semilla: r.semilla };
+}
+function dibujarVida(destino, tex, prof, asp, pan, vida, factor) {
+  uVida.uImg.value = tex;
+  uVida.uProf.value = prof;
+  uVida.uAsp.value = asp;
+  uVida.uPan.value = pan;
+  uVida.uSem.value = vida.semilla;
+  for (let k = 0; k < capas.length; k++) {
+    uVida.uW.value[k] = vida.pesos[k] * factor * estado.vida.intensidad;
+    uVida.uC.value[k].fromArray(vida.valores[k]);
+  }
+  renderer.setRenderTarget(destino);
+  renderer.render(escenaVida, camara);
+  renderer.setRenderTarget(null);
+}
+function describir(vida) {
+  const partes = capas.map((c, k) => [c.nombre, vida.pesos[k]]).filter(([, w]) => w > 0.01)
+    .sort((a, b) => b[1] - a[1]).map(([n, w]) => `${n.toLowerCase()} ${w.toFixed(2)}`);
+  return partes.length ? partes.join(' + ') : 'sin vida';
+}
+
 function prepararGrilla(celdaCss) {
   const res = uniforms.uRes.value;
   const clave = `${res.x}x${res.y}x${celdaCss}`;
@@ -110,6 +194,7 @@ function prepararGrilla(celdaCss) {
 }
 
 const texturas = [];
+const profundidades = [];
 const proporciones = [];
 const direccionPaneo = [1, -1];
 
@@ -124,6 +209,13 @@ async function cargar() {
     texturas.push(t);
     proporciones.push(t.image.width / t.image.height);
   }
+  for (const url of PROFUNDIDADES) {
+    const t = await cargador.loadAsync(url);
+    t.colorSpace = THREE.NoColorSpace;
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.generateMipmaps = true;
+    profundidades.push(t);
+  }
 }
 
 // ---------- scroll ----------
@@ -137,6 +229,8 @@ function medir() {
   renderer.setSize(w, h, true);
   const dpr = renderer.getPixelRatio();
   uniforms.uRes.value.set(Math.round(w * dpr), Math.round(h * dpr));
+  rtA.setSize(uniforms.uRes.value.x, uniforms.uRes.value.y);
+  rtB.setSize(uniforms.uRes.value.x, uniforms.uRes.value.y);
   const tramoAnterior = altoTramo;
   altoTramo = Math.max(200, h * estado.tramo);
   cinta.style.height = `${TRAMOS * altoTramo + h}px`;
@@ -201,6 +295,9 @@ const ui = {
   generales: document.getElementById('generales'),
   valores: document.getElementById('valores'),
   salida: document.getElementById('salida'),
+  botonesVida: document.getElementById('botones-vida'),
+  paramsVida: document.getElementById('params-vida'),
+  generalesVida: document.getElementById('generales-vida'),
 };
 
 function formato(v, paso) {
@@ -262,7 +359,40 @@ function armarGenerales() {
     (v) => { estado.suavizado = v; guardar(); });
 }
 
-function armarTodo() { armarBotones(); armarParams(); armarGenerales(); ultimaClave = ''; }
+function armarVida() {
+  const v = estado.vida;
+  ui.botonesVida.innerHTML = '';
+  const boton = (texto, activo, alHacer) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = texto;
+    b.setAttribute('aria-pressed', String(activo));
+    b.addEventListener('click', alHacer);
+    ui.botonesVida.appendChild(b);
+  };
+  capas.forEach((c, k) => boton(`${k + 1} · ${c.nombre}`, v.modo === 'capa' && v.capa === k,
+    () => { v.modo = 'capa'; v.capa = k; guardar(); armarVida(); }));
+  boton('recetas al azar', v.modo === 'receta', () => { v.modo = 'receta'; guardar(); armarVida(); });
+  boton('sin vida', v.modo === 'apagada', () => { v.modo = 'apagada'; guardar(); armarVida(); });
+
+  ui.paramsVida.innerHTML = '';
+  const c = capas[v.capa];
+  const titulo = document.createElement('p');
+  titulo.className = 'subtitulo';
+  titulo.textContent = v.modo === 'receta' ? `Parámetros de ${c.nombre} (base de las recetas)` : `Parámetros de ${c.nombre}`;
+  ui.paramsVida.appendChild(titulo);
+  c.params.forEach((p, q) => {
+    deslizador(ui.paramsVida, `v-${c.id}-${q}`, p.nombre, p.unidad, p.min, p.max, p.paso, v.valores[v.capa][q],
+      (x) => { v.valores[v.capa][q] = x; recetas.clear(); guardar(); });
+  });
+  ui.generalesVida.innerHTML = '';
+  deslizador(ui.generalesVida, 'v-antes', 'Arranque antes del final de la transición', '', 0, 0.8, 0.05, v.antes,
+    (x) => { v.antes = x; guardar(); });
+  deslizador(ui.generalesVida, 'v-intensidad', 'Intensidad general de la vida', '', 0, 2, 0.05, v.intensidad,
+    (x) => { v.intensidad = x; guardar(); });
+}
+
+function armarTodo() { armarBotones(); armarParams(); armarGenerales(); armarVida(); ultimaClave = ''; }
 
 ui.abrir.addEventListener('click', () => {
   const abierto = ui.ajustes.hidden;
@@ -272,6 +402,13 @@ ui.abrir.addEventListener('click', () => {
 });
 ui.shuffle.addEventListener('click', () => { estado.shuffle = !estado.shuffle; guardar(); armarTodo(); });
 document.getElementById('semilla').addEventListener('click', () => { estado.semilla += 1; guardar(); ultimaClave = ''; });
+document.getElementById('otra-receta').addEventListener('click', () => {
+  estado.semilla += 1; estado.vida.modo = 'receta'; recetas.clear(); guardar(); armarVida(); ultimaClave = '';
+});
+document.getElementById('restaurar-vida').addEventListener('click', () => {
+  estado.vida.valores[estado.vida.capa] = capas[estado.vida.capa].params.map((p) => p.def);
+  recetas.clear(); guardar(); armarVida();
+});
 document.getElementById('restaurar').addEventListener('click', () => {
   estado.valores[estado.efecto] = valoresPorDefecto(efectos[estado.efecto]);
   guardar(); armarParams();
@@ -282,6 +419,11 @@ ui.valores.addEventListener('click', () => {
     efectos: Object.fromEntries(efectos.map((ef, i) => [ef.id,
       Object.fromEntries(ef.params.map((p, k) => [p.nombre, estado.valores[i][k]]))])),
     largoTramoPantallas: estado.tramo, fraccionPaneo: estado.reposo, inercia: estado.suavizado,
+    vida: {
+      capas: Object.fromEntries(capas.map((c, k) => [c.id,
+        Object.fromEntries(c.params.map((p, q) => [p.nombre, estado.vida.valores[k][q]]))])),
+      arranqueAntesDelFinal: estado.vida.antes, intensidadGeneral: estado.vida.intensidad,
+    },
   };
   const texto = JSON.stringify(datos, null, 1);
   ui.salida.hidden = false;
@@ -294,6 +436,10 @@ ui.valores.addEventListener('click', () => {
 });
 
 // ---------- cuadro a cuadro ----------
+// Con la vida activa se dibuja en cada cuadro: la foto nunca queda quieta.
+let tAnterior = 0;
+let sAnterior = null;
+let velocidad = 0;
 function cuadro(ahora) {
   requestAnimationFrame(cuadro);
   if (!texturas.length) return;
@@ -301,6 +447,17 @@ function cuadro(ahora) {
   sSuave += (objetivo - sSuave) * estado.suavizado;
   if (Math.abs(objetivo - sSuave) < 0.05) sSuave = objetivo;
   if (objetivo === sSuave) recolocarSiHaceFalta(ahora);
+
+  // velocidad del scroll en pantallas por segundo (sin contar los saltos de la cinta infinita)
+  const t = ahora / 1000;
+  const dt = tAnterior ? Math.min(0.1, t - tAnterior) : 1 / 60;
+  tAnterior = t;
+  const alto = window.innerHeight;
+  let ds = sAnterior === null ? 0 : (sSuave - sAnterior) / alto;
+  if (Math.abs(ds) > 3) ds = 0;
+  sAnterior = sSuave;
+  velocidad += (ds / Math.max(dt, 1e-3) - velocidad) * 0.35;
+  resorte.paso(dt, Math.max(-4, Math.min(4, velocidad)), estado.vida.valores[2][1]);
 
   const s = sSuave / altoTramo;
   const i = Math.floor(s);
@@ -310,35 +467,60 @@ function cuadro(ahora) {
   const nEf = efectoDelTramo(i);
   let p = 0, panA;
   if (f < estado.reposo) {
-    const t = suave(f / estado.reposo);
-    panA = direccionPaneo[ia] * (t * 2 - 1);
+    const tt = suave(f / estado.reposo);
+    panA = direccionPaneo[ia] * (tt * 2 - 1);
   } else {
     p = (f - estado.reposo) / (1 - estado.reposo);
     panA = direccionPaneo[ia];
   }
+  const panB = -direccionPaneo[ib];
+  const conVida = estado.vida.modo !== 'apagada';
   const clave = `${i}|${f.toFixed(5)}|${nEf}|${uniforms.uRes.value.x}`;
-  if (clave === ultimaClave) return;
+  if (!conVida && clave === ultimaClave) return;
   ultimaClave = clave;
 
-  plano.material = materiales[nEf];
-  uniforms.uA.value = texturas[ia];
-  uniforms.uB.value = texturas[ib];
-  uniforms.uAspA.value = proporciones[ia];
-  uniforms.uAspB.value = proporciones[ib];
-  uniforms.uPanA.value = panA;
-  uniforms.uPanB.value = -direccionPaneo[ib];
-  uniforms.uP.value = p;
-  uniforms.uSeed.value = semillaDe(i);
-  uniforms.uParam.value.fromArray(estado.valores[nEf]);
-  const conPuntos = nube && efectos[nEf].tipo === 'particulas' && p > 0;
-  if (nube) {
-    nube.visible = conPuntos;
-    if (conPuntos) prepararGrilla(estado.valores[nEf][0]);
-  }
-  if (vidrio) vidrio.visible = efectos[nEf] === efVid && p > 0;
-  renderer.render(escena, camara);
+  uVida.uT.value = t;
+  uVida.uRecorrido.value = sSuave / alto;
+  uVida.uElast.value = resorte.valor;
+  const vidaA = vidaDe(i, t);
+  const sa = uniforms.uRes.value.x / uniforms.uRes.value.y;
 
-  ui.nombre.textContent = f < estado.reposo ? 'Reposo · paneo' : efectos[nEf].nombre;
+  if (p === 0) {
+    // Reposo: la foto viva directo a la pantalla.
+    dibujarVida(null, texturas[ia], profundidades[ia], proporciones[ia], panA, vidaA, 1);
+  } else {
+    // Transición: la foto que sale conserva la vida al principio; la que entra la
+    // recibe antes de que la transición termine.
+    const fA = 1 - suave(Math.min(1, p / AJUSTES_VIDA.salida));
+    const fB = estado.vida.antes > 0 ? suave(Math.max(0, Math.min(1, (p - (1 - estado.vida.antes)) / estado.vida.antes))) : 0;
+    uniforms.uA.value = texturas[ia];
+    uniforms.uAspA.value = proporciones[ia];
+    uniforms.uPanA.value = panA;
+    uniforms.uB.value = texturas[ib];
+    uniforms.uAspB.value = proporciones[ib];
+    uniforms.uPanB.value = panB;
+    if (conVida && fA > 0.001) {
+      dibujarVida(rtA, texturas[ia], profundidades[ia], proporciones[ia], panA, vidaA, fA);
+      uniforms.uA.value = rtA.texture; uniforms.uAspA.value = sa; uniforms.uPanA.value = 0;
+    }
+    if (conVida && fB > 0.001) {
+      dibujarVida(rtB, texturas[ib], profundidades[ib], proporciones[ib], panB, vidaDe(i + 1, t), fB);
+      uniforms.uB.value = rtB.texture; uniforms.uAspB.value = sa; uniforms.uPanB.value = 0;
+    }
+    plano.material = materiales[nEf];
+    uniforms.uP.value = p;
+    uniforms.uSeed.value = semillaDe(i);
+    uniforms.uParam.value.fromArray(estado.valores[nEf]);
+    const conPuntos = nube && efectos[nEf].tipo === 'particulas';
+    if (nube) {
+      nube.visible = conPuntos;
+      if (conPuntos) prepararGrilla(estado.valores[nEf][0]);
+    }
+    if (vidrio) vidrio.visible = efectos[nEf] === efVid;
+    renderer.render(escena, camara);
+  }
+
+  ui.nombre.textContent = f < estado.reposo ? `Reposo · ${describir(vidaA)}` : efectos[nEf].nombre;
   ui.progreso.textContent = f < estado.reposo ? '' : `${Math.round(p * 100)} %`;
   ui.barra.style.transform = `scaleX(${f < estado.reposo ? 0 : p})`;
 }
@@ -352,6 +534,7 @@ cargar().then(() => {
   if (nube) { prepararGrilla(efPart.params[0].def); nube.visible = true; }
   if (vidrio) vidrio.visible = true;
   for (const mat of materiales) { plano.material = mat; renderer.compile(escena, camara); }
+  renderer.compile(escenaVida, camara);
   if (nube) nube.visible = false;
   if (vidrio) vidrio.visible = false;
   ultimaClave = '';
