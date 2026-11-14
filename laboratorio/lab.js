@@ -28,13 +28,13 @@ const estado = {
   valores: efectos.map(valoresPorDefecto),
   suavizado: 0.15,           // 1 = sin suavizado
   reposo: 0.5,               // fracción del tramo dedicada al paneo
-  tramo: 2.0,                // largo de un tramo en alturas de pantalla
+  tramo: 3.0,                // largo de un tramo en alturas de pantalla (igual que el sitio)
+  version: 2,                // 2: tramo de 3 pantallas y relevo de la vida a mitad de transición
   semilla: 0,
   vida: {
     modo: 'receta',          // 'receta' (una capa al azar por foto), 'capa' (la elegida) o 'apagada'
     capa: 0,                 // capa elegida para ver sola y ajustar
     valores: valoresVidaPorDefecto(),
-    antes: AJUSTES_VIDA.antes,   // la vida de la foto nueva arranca antes de que termine la transición
     intensidad: AJUSTES_VIDA.intensidad,
   },
 };
@@ -59,7 +59,10 @@ try {
     const vida = { ...estado.vida, ...vg, valores: valoresVida };
     if (!['receta', 'capa', 'apagada'].includes(vida.modo)) vida.modo = 'receta';
     if (!(vida.capa >= 0 && vida.capa < capas.length)) vida.capa = 0;
-    Object.assign(estado, guardado, { valores, vida });
+    delete vida.antes;
+    // Ajustes guardados antes de la versión 2: se pasa al tramo de 3 pantallas.
+    const tramo = guardado.version === 2 ? guardado.tramo : 3.0;
+    Object.assign(estado, guardado, { valores, vida, tramo, version: 2 });
     if (!(estado.efecto >= 0 && estado.efecto < efectos.length)) estado.efecto = 0;
   }
 } catch (e) { /* sin almacenamiento: se usan los valores por defecto */ }
@@ -401,8 +404,6 @@ function armarVida() {
       (x) => { v.valores[v.capa][q] = x; recetas.clear(); guardar(); });
   });
   ui.generalesVida.innerHTML = '';
-  deslizador(ui.generalesVida, 'v-antes', 'Arranque antes del final de la transición', '', 0, 0.8, 0.05, v.antes,
-    (x) => { v.antes = x; guardar(); });
   deslizador(ui.generalesVida, 'v-intensidad', 'Intensidad general de la vida', '', 0, 2, 0.05, v.intensidad,
     (x) => { v.intensidad = x; guardar(); });
 }
@@ -437,7 +438,7 @@ ui.valores.addEventListener('click', () => {
     vida: {
       capas: Object.fromEntries(capas.map((c, k) => [c.id,
         Object.fromEntries(c.params.map((p, q) => [p.nombre, estado.vida.valores[k][q]]))])),
-      arranqueAntesDelFinal: estado.vida.antes, intensidadGeneral: estado.vida.intensidad,
+      intensidadGeneral: estado.vida.intensidad,
     },
   };
   const texto = JSON.stringify(datos, null, 1);
@@ -504,9 +505,9 @@ function cuadro(ahora) {
     dibujarVida(null, texturas[ia], profundidades[ia], proporciones[ia], panA, vidaA, 1);
   } else {
     // Transición: la foto que sale conserva la vida al principio; la que entra la
-    // recibe antes de que la transición termine.
+    // recibe desde la mitad (relevo: una sola foto viva a la vez).
     const fA = 1 - suave(Math.min(1, p / AJUSTES_VIDA.salida));
-    const fB = estado.vida.antes > 0 ? suave(Math.max(0, Math.min(1, (p - (1 - estado.vida.antes)) / estado.vida.antes))) : 0;
+    const fB = suave(Math.max(0, Math.min(1, (p - (1 - AJUSTES_VIDA.antes)) / AJUSTES_VIDA.antes)));
     uniforms.uA.value = texturas[ia];
     uniforms.uAspA.value = proporciones[ia];
     uniforms.uPanA.value = panA;

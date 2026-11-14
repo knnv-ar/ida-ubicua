@@ -49,8 +49,11 @@ export const capas = [
 
 // Ajustes generales (valores elegidos en el laboratorio, 2026-11-14).
 export const AJUSTES_VIDA = {
-  antes: 0.1,          // la vida de la foto que entra arranca en el último 10 % de la transición
-  salida: 0.2,         // la foto que sale conserva su vida en el primer 20 % de la transición
+  // Relevo durante la transición (fundido suave, como en cine): la foto que sale va
+  // perdiendo la vida hasta la mitad y la que entra la va ganando desde la mitad.
+  // En cada momento hay una sola foto viva, así que no suma costo de GPU.
+  antes: 0.5,          // la foto que entra gana la vida en la segunda mitad de la transición
+  salida: 0.5,         // la foto que sale la pierde en la primera mitad
   intensidad: 1.5,     // multiplica todas las capas
 };
 

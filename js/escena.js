@@ -269,8 +269,8 @@ export function crearDibujanteWebGL(lienzo) {
     uniforms.uAspB.value = tb.asp;
     uniforms.uPanA.value = e.panA;
     uniforms.uPanB.value = e.panB;
-    // La foto que sale conserva su vida al principio; la que entra la recibe antes
-    // de que la transición termine.
+    // Relevo: la foto que sale pierde la vida suavemente hasta la mitad de la
+    // transición y la que entra la gana desde la mitad (una sola foto viva a la vez).
     const suave = (x) => x * x * (3 - 2 * x);
     const fA = 1 - suave(Math.min(1, e.p / AJUSTES_VIDA.salida));
     const fB = AJUSTES_VIDA.antes > 0

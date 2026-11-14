@@ -20,7 +20,7 @@ Para probar en el celular dentro de la misma red wifi: `python -m http.server 80
 
 ## Nave central: transiciones y vida de las fotos
 
-La nave central es una cinta infinita de fotos manejada por el scroll vertical. Cada tramo tiene un reposo (la foto se panea) y una transición hacia la foto siguiente. Todo se dibuja con three.js sobre un único lienzo.
+La nave central es una cinta infinita de fotos manejada por el scroll vertical. Cada foto ocupa un tramo de 3 pantallas de desplazamiento (`AJUSTES.tramo` en `js/cinta.js`): la primera mitad es el reposo (la foto se panea) y la segunda, la transición hacia la foto siguiente. Todo se dibuja con three.js sobre un único lienzo.
 
 ### Transiciones (`js/efectos/`)
 
@@ -52,7 +52,7 @@ La foto paneada nunca queda quieta. Hay seis capas sutiles y cada reposo usa una
 
 - Variación: cada parámetro se desvía ±30 % del valor ajustado (`DESVIO`) y la intensidad deriva lento mientras se mira la foto. La inercia elástica tiene además un vaivén mínimo para no quedar quieta con el dedo quieto.
 - Rendimiento: el ruido fractal se lee de una textura precalculada (`datosRuido`), lo que es igual para toda la pantalla se calcula una vez por cuadro (`uniformesVida`) y el lienzo se dibuja a 1.5 píxeles por píxel CSS; si los cuadros tardan más de ~26 ms, `escena.js` baja la resolución a 1.25 y después a 1. (Una primera versión superponía hasta tres capas y era demasiado para la GPU de un celular medio.)
-- `AJUSTES_VIDA`: la foto que entra recibe la vida en el último 10 % de la transición, la que sale la conserva en el primer 20 %; intensidad general 1.5. Durante la transición la foto viva se dibuja en una textura (*render target*) que el efecto lee como si fuera la foto.
+- `AJUSTES_VIDA`: relevo durante la transición, como un fundido de cine: la foto que sale pierde la vida suavemente hasta la mitad y la que entra la gana desde la mitad (nunca hay dos fotos vivas a la vez); intensidad general 1.5. Durante la transición la foto viva se dibuja en una textura (*render target*) que el efecto lee como si fuera la foto.
 - La cinta dibuja a 30 cuadros por segundo con el dedo quieto y en cada cuadro mientras se desliza; se pausa en horizontal o en segundo plano. Durante la transición la foto viva se dibuja en una textura sin mipmaps.
 
 ### Mapas de profundidad (`img/profundidad/`)
